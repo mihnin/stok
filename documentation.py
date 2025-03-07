@@ -5,26 +5,7 @@ def get_documentation_content():
     Returns:
         str: HTML-разметка с документацией
     """
-    documentation = '''
-    <html>
-    <head>
-        <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; }
-            h1, h2, h3, h4 { color: #2B5797; }
-            table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-            th, td { padding: 8px; text-align: left; border: 1px solid #ddd; }
-            th { background-color: #f2f2f2; }
-            .status-box { padding: 10px; border-radius: 5px; margin-bottom: 10px; }
-            .status-likvid { background-color: #00b050; color: white; }
-            .status-ksnz { background-color: #ffbf00; color: black; }
-            .status-snz { background-color: #ff4c4c; color: white; }
-            .status-snz3 { background-color: #c00000; color: white; }
-            .status-check { background-color: #808080; color: white; }
-            pre.formula { background-color: #f5f5f5; padding: 10px; border-radius: 5px; font-family: Consolas, monospace; margin-top: 10px; margin-bottom: 15px; }
-            .formula-block { background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0 20px 0; }
-        </style>
-    </head>
-    <body>
+    documentation = """
     <h1 style="color: #2B5797; text-align: center;">Руководство пользователя</h1>
     <h2 style="color: #2B5797;">Система прогнозирования сверхнормативных запасов (СНЗ и КСНЗ)</h2>
     
@@ -61,7 +42,9 @@ def get_documentation_content():
             <li><b>СНЗ > 3 лет</b> — запас, хранящийся на складе более 3 лет, который с высокой вероятностью требует списания.</li>
         </ul>
     </div>
+    """
     
+    methods_section = """
     <div id="methods" style="margin-top: 40px;">
         <h3>2. Методы прогнозирования</h3>
         <p>
@@ -76,82 +59,90 @@ def get_documentation_content():
         <p>
             <b>Шкала старения для Метода 1:</b>
         </p>
-        <table border="1" style="border-collapse: collapse; width: 100%;">
-            <tr style="background-color: #f2f2f2;">
-                <th style="padding: 8px; text-align: left;">Интервалы шкалы старения</th>
-                <th style="padding: 8px; text-align: center;">Нижняя граница (дни)</th>
-                <th style="padding: 8px; text-align: center;">Верхняя граница (дни)</th>
-                <th style="padding: 8px; text-align: center;">Категория запаса</th>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">< 1 месяца</td>
-                <td style="padding: 8px; text-align: center;">0</td>
-                <td style="padding: 8px; text-align: center;">30</td>
-                <td style="padding: 8px; text-align: center; background-color: #00b050; color: white;">Ликвидный</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">1-3 месяцев</td>
-                <td style="padding: 8px; text-align: center;">31</td>
-                <td style="padding: 8px; text-align: center;">91</td>
-                <td style="padding: 8px; text-align: center; background-color: #00b050; color: white;">Ликвидный</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">3-6 месяцев</td>
-                <td style="padding: 8px; text-align: center;">92</td>
-                <td style="padding: 8px; text-align: center;">183</td>
-                <td style="padding: 8px; text-align: center; background-color: #00b050; color: white;">Ликвидный</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">6-9 месяцев</td>
-                <td style="padding: 8px; text-align: center;">184</td>
-                <td style="padding: 8px; text-align: center;">274</td>
-                <td style="padding: 8px; text-align: center; background-color: #00b050; color: white;">Ликвидный</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">9-12 месяцев</td>
-                <td style="padding: 8px; text-align: center;">275</td>
-                <td style="padding: 8px; text-align: center;">365</td>
-                <td style="padding: 8px; text-align: center; background-color: #ffbf00;">КСНЗ</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">12-18 месяцев</td>
-                <td style="padding: 8px; text-align: center;">366</td>
-                <td style="padding: 8px; text-align: center;">548</td>
-                <td style="padding: 8px; text-align: center; background-color: #ff4c4c; color: white;">СНЗ</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">18-24 месяца</td>
-                <td style="padding: 8px; text-align: center;">549</td>
-                <td style="padding: 8px; text-align: center;">730</td>
-                <td style="padding: 8px; text-align: center; background-color: #ff4c4c; color: white;">СНЗ</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">2-3 года</td>
-                <td style="padding: 8px; text-align: center;">731</td>
-                <td style="padding: 8px; text-align: center;">1096</td>
-                <td style="padding: 8px; text-align: center; background-color: #ff4c4c; color: white;">СНЗ</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">3-4 года</td>
-                <td style="padding: 8px; text-align: center;">1097</td>
-                <td style="padding: 8px; text-align: center;">1461</td>
-                <td style="padding: 8px; text-align: center; background-color: #c00000; color: white;">СНЗ > 3 лет</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">4-5 лет</td>
-                <td style="padding: 8px; text-align: center;">1462</td>
-                <td style="padding: 8px; text-align: center;">1826</td>
-                <td style="padding: 8px; text-align: center; background-color: #c00000; color: white;">СНЗ > 3 лет</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">>5 лет</td>
-                <td style="padding: 8px; text-align: center;">1827</td>
-                <td style="padding: 8px; text-align: center;">9999</td>
-                <td style="padding: 8px; text-align: center; background-color: #c00000; color: white;">СНЗ > 3 лет</td>
-            </tr>
-        </table>
-        
-        <h4 style="margin-top: 20px;">Метод 2: Прогноз без учета потребности (только фактический запас)</h4>
+    </div>
+    """
+    
+    # Таблица для Метода 1
+    method1_table = """
+    <table style="border-collapse: collapse; width: 100%; margin-top: 20px;">
+        <tr style="background-color: #f2f2f2;">
+            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Интервалы шкалы старения</th>
+            <th style="padding: 8px; text-align: center; border: 1px solid #ddd;">Нижняя граница (дни)</th>
+            <th style="padding: 8px; text-align: center; border: 1px solid #ddd;">Верхняя граница (дни)</th>
+            <th style="padding: 8px; text-align: center; border: 1px solid #ddd;">Категория запаса</th>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">< 1 месяца</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">0</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">30</td>
+            <td style="padding: 8px; text-align: center; background-color: #00b050; color: white; border: 1px solid #ddd;">Ликвидный</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">1-3 месяцев</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">31</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">91</td>
+            <td style="padding: 8px; text-align: center; background-color: #00b050; color: white; border: 1px solid #ddd;">Ликвидный</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">3-6 месяцев</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">92</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">183</td>
+            <td style="padding: 8px; text-align: center; background-color: #00b050; color: white; border: 1px solid #ddd;">Ликвидный</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">6-9 месяцев</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">184</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">274</td>
+            <td style="padding: 8px; text-align: center; background-color: #00b050; color: white; border: 1px solid #ddd;">Ликвидный</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">9-12 месяцев</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">275</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">365</td>
+            <td style="padding: 8px; text-align: center; background-color: #ffbf00; border: 1px solid #ddd;">КСНЗ</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">12-18 месяцев</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">366</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">548</td>
+            <td style="padding: 8px; text-align: center; background-color: #ff4c4c; color: white; border: 1px solid #ddd;">СНЗ</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">18-24 месяца</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">549</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">730</td>
+            <td style="padding: 8px; text-align: center; background-color: #ff4c4c; color: white; border: 1px solid #ddd;">СНЗ</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">2-3 года</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">731</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">1096</td>
+            <td style="padding: 8px; text-align: center; background-color: #ff4c4c; color: white; border: 1px solid #ddd;">СНЗ</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">3-4 года</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">1097</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">1461</td>
+            <td style="padding: 8px; text-align: center; background-color: #c00000; color: white; border: 1px solid #ddd;">СНЗ > 3 лет</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">4-5 лет</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">1462</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">1826</td>
+            <td style="padding: 8px; text-align: center; background-color: #c00000; color: white; border: 1px solid #ddd;">СНЗ > 3 лет</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">>5 лет</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">1827</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">9999</td>
+            <td style="padding: 8px; text-align: center; background-color: #c00000; color: white; border: 1px solid #ddd;">СНЗ > 3 лет</td>
+        </tr>
+    </table>
+    """
+    
+    method2_section = """
+    <div style="margin-top: 20px;">
+        <h4>Метод 2: Прогноз без учета потребности (только фактический запас)</h4>
         <p>
             Этот метод основан только на текущем фактическом запасе на складе, без учета потребности и планируемого обеспечения. 
             Он показывает, когда материалы перейдут в категорию КСНЗ или СНЗ, если не будут использованы вообще.
@@ -159,112 +150,118 @@ def get_documentation_content():
         <p>
             <b>Шкала старения для Метода 2:</b>
         </p>
-        <table border="1" style="border-collapse: collapse; width: 100%;">
-            <tr style="background-color: #f2f2f2;">
-                <th style="padding: 8px; text-align: left;">Интервалы шкалы старения</th>
-                <th style="padding: 8px; text-align: center;">Нижняя граница (дни)</th>
-                <th style="padding: 8px; text-align: center;">Верхняя граница (дни)</th>
-                <th style="padding: 8px; text-align: center;">Категория запаса</th>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">< 1 месяца</td>
-                <td style="padding: 8px; text-align: center;">0</td>
-                <td style="padding: 8px; text-align: center;">29</td>
-                <td style="padding: 8px; text-align: center; background-color: #00b050; color: white;">Ликвидный</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">1 месяц</td>
-                <td style="padding: 8px; text-align: center;">30</td>
-                <td style="padding: 8px; text-align: center;">59</td>
-                <td style="padding: 8px; text-align: center; background-color: #00b050; color: white;">Ликвидный</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">2 месяца</td>
-                <td style="padding: 8px; text-align: center;">60</td>
-                <td style="padding: 8px; text-align: center;">90</td>
-                <td style="padding: 8px; text-align: center; background-color: #00b050; color: white;">Ликвидный</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">3 месяца</td>
-                <td style="padding: 8px; text-align: center;">91</td>
-                <td style="padding: 8px; text-align: center;">121</td>
-                <td style="padding: 8px; text-align: center; background-color: #00b050; color: white;">Ликвидный</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">4 месяца</td>
-                <td style="padding: 8px; text-align: center;">122</td>
-                <td style="padding: 8px; text-align: center;">152</td>
-                <td style="padding: 8px; text-align: center; background-color: #00b050; color: white;">Ликвидный</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">5 месяцев</td>
-                <td style="padding: 8px; text-align: center;">153</td>
-                <td style="padding: 8px; text-align: center;">182</td>
-                <td style="padding: 8px; text-align: center; background-color: #00b050; color: white;">Ликвидный</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">6 месяцев</td>
-                <td style="padding: 8px; text-align: center;">183</td>
-                <td style="padding: 8px; text-align: center;">213</td>
-                <td style="padding: 8px; text-align: center; background-color: #00b050; color: white;">Ликвидный</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">7 месяцев</td>
-                <td style="padding: 8px; text-align: center;">214</td>
-                <td style="padding: 8px; text-align: center;">244</td>
-                <td style="padding: 8px; text-align: center; background-color: #00b050; color: white;">Ликвидный</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">8 месяцев</td>
-                <td style="padding: 8px; text-align: center;">245</td>
-                <td style="padding: 8px; text-align: center;">273</td>
-                <td style="padding: 8px; text-align: center; background-color: #00b050; color: white;">Ликвидный</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">9 месяцев</td>
-                <td style="padding: 8px; text-align: center;">274</td>
-                <td style="padding: 8px; text-align: center;">304</td>
-                <td style="padding: 8px; text-align: center; background-color: #00b050; color: white;">Ликвидный</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">10 месяцев</td>
-                <td style="padding: 8px; text-align: center;">305</td>
-                <td style="padding: 8px; text-align: center;">334</td>
-                <td style="padding: 8px; text-align: center; background-color: #ffbf00;">КСНЗ</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">11 месяцев</td>
-                <td style="padding: 8px; text-align: center;">335</td>
-                <td style="padding: 8px; text-align: center;">364</td>
-                <td style="padding: 8px; text-align: center; background-color: #ffbf00;">КСНЗ</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">12-18 месяцев</td>
-                <td style="padding: 8px; text-align: center;">365</td>
-                <td style="padding: 8px; text-align: center;">547</td>
-                <td style="padding: 8px; text-align: center; background-color: #ff4c4c; color: white;">СНЗ</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">18-24 месяца</td>
-                <td style="padding: 8px; text-align: center;">548</td>
-                <td style="padding: 8px; text-align: center;">1095</td>
-                <td style="padding: 8px; text-align: center; background-color: #ff4c4c; color: white;">СНЗ</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">> 3 лет</td>
-                <td style="padding: 8px; text-align: center;">1096</td>
-                <td style="padding: 8px; text-align: center;">9999</td>
-                <td style="padding: 8px; text-align: center; background-color: #c00000; color: white;">СНЗ > 3 лет</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">Без даты в SAP ERP</td>
-                <td style="padding: 8px; text-align: center;">≥ 10000</td>
-                <td style="padding: 8px; text-align: center;">-</td>
-                <td style="padding: 8px; text-align: center; background-color: #808080; color: white;">Требует проверки</td>
-            </tr>
-        </table>
     </div>
+    """
     
+    # Таблица для Метода 2
+    method2_table = """
+    <table style="border-collapse: collapse; width: 100%; margin-top: 20px;">
+        <tr style="background-color: #f2f2f2;">
+            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Интервалы шкалы старения</th>
+            <th style="padding: 8px; text-align: center; border: 1px solid #ddd;">Нижняя граница (дни)</th>
+            <th style="padding: 8px; text-align: center; border: 1px solid #ddd;">Верхняя граница (дни)</th>
+            <th style="padding: 8px; text-align: center; border: 1px solid #ddd;">Категория запаса</th>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">< 1 месяца</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">0</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">29</td>
+            <td style="padding: 8px; text-align: center; background-color: #00b050; color: white; border: 1px solid #ddd;">Ликвидный</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">1 месяц</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">30</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">59</td>
+            <td style="padding: 8px; text-align: center; background-color: #00b050; color: white; border: 1px solid #ddd;">Ликвидный</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">2 месяца</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">60</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">90</td>
+            <td style="padding: 8px; text-align: center; background-color: #00b050; color: white; border: 1px solid #ddd;">Ликвидный</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">3 месяца</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">91</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">121</td>
+            <td style="padding: 8px; text-align: center; background-color: #00b050; color: white; border: 1px solid #ddd;">Ликвидный</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">4 месяца</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">122</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">152</td>
+            <td style="padding: 8px; text-align: center; background-color: #00b050; color: white; border: 1px solid #ddd;">Ликвидный</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">5 месяцев</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">153</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">182</td>
+            <td style="padding: 8px; text-align: center; background-color: #00b050; color: white; border: 1px solid #ddd;">Ликвидный</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">6 месяцев</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">183</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">213</td>
+            <td style="padding: 8px; text-align: center; background-color: #00b050; color: white; border: 1px solid #ddd;">Ликвидный</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">7 месяцев</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">214</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">244</td>
+            <td style="padding: 8px; text-align: center; background-color: #00b050; color: white; border: 1px solid #ddd;">Ликвидный</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">8 месяцев</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">245</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">273</td>
+            <td style="padding: 8px; text-align: center; background-color: #00b050; color: white; border: 1px solid #ddd;">Ликвидный</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">9 месяцев</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">274</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">304</td>
+            <td style="padding: 8px; text-align: center; background-color: #00b050; color: white; border: 1px solid #ddd;">Ликвидный</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">10 месяцев</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">305</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">334</td>
+            <td style="padding: 8px; text-align: center; background-color: #ffbf00; border: 1px solid #ddd;">КСНЗ</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">11 месяцев</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">335</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">364</td>
+            <td style="padding: 8px; text-align: center; background-color: #ffbf00; border: 1px solid #ddd;">КСНЗ</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">12-18 месяцев</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">365</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">547</td>
+            <td style="padding: 8px; text-align: center; background-color: #ff4c4c; color: white; border: 1px solid #ddd;">СНЗ</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">18-24 месяца</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">548</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">1095</td>
+            <td style="padding: 8px; text-align: center; background-color: #ff4c4c; color: white; border: 1px solid #ddd;">СНЗ</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">> 3 лет</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">1096</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">9999</td>
+            <td style="padding: 8px; text-align: center; background-color: #c00000; color: white; border: 1px solid #ddd;">СНЗ > 3 лет</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">Без даты в SAP ERP</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">≥ 10000</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">-</td>
+            <td style="padding: 8px; text-align: center; background-color: #808080; color: white; border: 1px solid #ddd;">Требует проверки</td>
+        </tr>
+    </table>
+    """
+    
+    data_preparation_section = """
     <div id="data-preparation" style="margin-top: 40px;">
         <h3>3. Подготовка данных</h3>
         <p>
@@ -276,97 +273,111 @@ def get_documentation_content():
         <p>
             Необходимый формат данных (отчет ZMML_REP_RD):
         </p>
-        <table border="1" style="border-collapse: collapse; width: 100%;">
-            <tr style="background-color: #f2f2f2;">
-                <th style="padding: 8px; text-align: left;">Колонка</th>
-                <th style="padding: 8px; text-align: left;">Описание</th>
-                <th style="padding: 8px; text-align: left;">Обязательность</th>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">БЕ</td>
-                <td style="padding: 8px;">Бизнес-единица</td>
-                <td style="padding: 8px;">Обязательно</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">Область планирования</td>
-                <td style="padding: 8px;">Область планирования</td>
-                <td style="padding: 8px;">Обязательно</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">Материал</td>
-                <td style="padding: 8px;">Код материала</td>
-                <td style="padding: 8px;">Обязательно</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">Количество обеспечения</td>
-                <td style="padding: 8px;">Текущее количество на складе</td>
-                <td style="padding: 8px;">Обязательно</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">Дата поступления</td>
-                <td style="padding: 8px;">Историческая дата поступления или дата поступления на склад</td>
-                <td style="padding: 8px;">Обязательно</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">Дневное потребление</td>
-                <td style="padding: 8px;">Среднее дневное потребление материала</td>
-                <td style="padding: 8px;">Опционально (если не указано, будет считаться равным 0)</td>
-            </tr>
-        </table>
-        
-        <h4 style="margin-top: 20px;">Для Метода 2: Прогноз без учета потребности</h4>
+    </div>
+    """
+    
+    method1_data_table = """
+    <table style="border-collapse: collapse; width: 100%; margin-top: 20px;">
+        <tr style="background-color: #f2f2f2;">
+            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Колонка</th>
+            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Описание</th>
+            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Обязательность</th>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">БЕ</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">Бизнес-единица</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">Обязательно</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">Область планирования</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">Область планирования</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">Обязательно</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">Материал</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">Код материала</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">Обязательно</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">Количество обеспечения</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">Текущее количество на складе</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">Обязательно</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">Дата поступления</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">Историческая дата поступления или дата поступления на склад</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">Обязательно</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">Дневное потребление</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">Среднее дневное потребление материала</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">Опционально (если не указано, будет считаться равным 0)</td>
+        </tr>
+    </table>
+    """
+    
+    method2_data_section = """
+    <div style="margin-top: 20px;">
+        <h4>Для Метода 2: Прогноз без учета потребности</h4>
         <p>
             Необходимый формат данных (отчет MB52):
         </p>
-        <table border="1" style="border-collapse: collapse; width: 100%;">
-            <tr style="background-color: #f2f2f2;">
-                <th style="padding: 8px; text-align: left;">Колонка</th>
-                <th style="padding: 8px; text-align: left;">Описание</th>
-                <th style="padding: 8px; text-align: left;">Обязательность</th>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">БЕ</td>
-                <td style="padding: 8px;">Бизнес-единица</td>
-                <td style="padding: 8px;">Обязательно</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">Завод</td>
-                <td style="padding: 8px;">Код завода</td>
-                <td style="padding: 8px;">Обязательно</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">Склад</td>
-                <td style="padding: 8px;">Код склада</td>
-                <td style="padding: 8px;">Обязательно</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">Материал</td>
-                <td style="padding: 8px;">Код материала</td>
-                <td style="padding: 8px;">Обязательно</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">Партия</td>
-                <td style="padding: 8px;">Номер партии</td>
-                <td style="padding: 8px;">Обязательно</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">СПП элемент</td>
-                <td style="padding: 8px;">СПП элемент</td>
-                <td style="padding: 8px;">Обязательно (может быть пустым)</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">Дата поступления на склад</td>
-                <td style="padding: 8px;">Дата поступления материала на склад</td>
-                <td style="padding: 8px;">Обязательно</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">Фактический запас</td>
-                <td style="padding: 8px;">Текущее количество на складе</td>
-                <td style="padding: 8px;">Обязательно</td>
-            </tr>
-        </table>
-        
-        <p style="margin-top: 20px;">
+    </div>
+    """
+    
+    method2_data_table = """
+    <table style="border-collapse: collapse; width: 100%; margin-top: 20px;">
+        <tr style="background-color: #f2f2f2;">
+            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Колонка</th>
+            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Описание</th>
+            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Обязательность</th>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">БЕ</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">Бизнес-единица</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">Обязательно</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">Завод</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">Код завода</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">Обязательно</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">Склад</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">Код склада</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">Обязательно</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">Материал</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">Код материала</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">Обязательно</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">Партия</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">Номер партии</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">Обязательно</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">СПП элемент</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">СПП элемент</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">Обязательно (может быть пустым)</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">Дата поступления на склад</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">Дата поступления материала на склад</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">Обязательно</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">Фактический запас</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">Текущее количество на складе</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">Обязательно</td>
+        </tr>
+    </table>
+    """
+    
+    data_notes = """
+    <div style="margin-top: 20px;">
+        <p>
             <b>Важно:</b> Даты в исходных данных должны быть в формате, который может быть распознан как дата (например, YYYY-MM-DD, DD.MM.YYYY).
             Числовые данные (количество, потребление) должны быть представлены в виде чисел, а не текста.
         </p>
@@ -375,7 +386,10 @@ def get_documentation_content():
             Вы можете скачать примеры шаблонов данных для обоих методов с помощью кнопок в боковой панели приложения.
         </p>
     </div>
+    """
     
+    # Остальные разделы документации
+    remaining_sections = """
     <div id="usage" style="margin-top: 40px;">
         <h3>4. Работа с приложением</h3>
         <p>
@@ -512,62 +526,68 @@ def get_documentation_content():
         <p>
             Пример:
         </p>
-        <table border="1" style="border-collapse: collapse; width: 100%;">
-            <tr style="background-color: #f2f2f2;">
-                <th style="padding: 8px; text-align: left;">БЕ</th>
-                <th style="padding: 8px; text-align: left;">Завод</th>
-                <th style="padding: 8px; text-align: left;">Склад</th>
-                <th style="padding: 8px; text-align: left;">Материал</th>
-                <th style="padding: 8px; text-align: left;">Партия</th>
-                <th style="padding: 8px; text-align: left;">Дата поступления</th>
-                <th style="padding: 8px; text-align: left;">Количество</th>
-                <th style="padding: 8px; text-align: left;">Категория</th>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">0101</td>
-                <td style="padding: 8px;">1111</td>
-                <td style="padding: 8px;">1111</td>
-                <td style="padding: 8px;">222222</td>
-                <td style="padding: 8px;">1111222444</td>
-                <td style="padding: 8px;">27.12.2023</td>
-                <td style="padding: 8px;">30</td>
-                <td style="padding: 8px;">КСНЗ</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px;">0101</td>
-                <td style="padding: 8px;">1111</td>
-                <td style="padding: 8px;">1111</td>
-                <td style="padding: 8px;">222222</td>
-                <td style="padding: 8px;">1111222444</td>
-                <td style="padding: 8px;">10.01.2024</td>
-                <td style="padding: 8px;">70</td>
-                <td style="padding: 8px;">Ликвидный</td>
-            </tr>
-        </table>
-        <p>
-            В этом примере часть партии поступила в декабре 2023 года (30 единиц), а часть — в январе 2024 года (70 единиц).
-            При прогнозировании система будет учитывать разные даты поступления и соответствующие категории запаса.
-        </p>
-        
-        <h4>Материалы без даты поступления</h4>
-        <p>
-            В некоторых случаях в данных может отсутствовать информация о дате поступления материала на склад.
-        </p>
-        <p>
-            <b>Обработка:</b> Материалы без даты поступления помечаются специальной категорией "Требует проверки" 
-            и выделяются серым цветом в результатах. Такие материалы требуют дополнительного анализа и уточнения данных.
-        </p>
-        
-        <h4>Отсутствие данных о потреблении</h4>
-        <p>
-            При использовании Метода 1 (с учетом потребности) может отсутствовать информация о дневном потреблении материалов.
-        </p>
-        <p>
-            <b>Обработка:</b> Если колонка "Дневное потребление" отсутствует в исходных данных, система автоматически
-            добавляет ее и заполняет нулевыми значениями. В этом случае прогноз будет строиться исходя из предположения,
-            что материалы не потребляются (аналогично Методу 2).
-        </p>
     </div>
+    """
+
+    batch_example_table = """
+    <table style="border-collapse: collapse; width: 100%; margin-top: 20px;">
+        <tr style="background-color: #f2f2f2;">
+            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">БЕ</th>
+            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Завод</th>
+            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Склад</th>
+            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Материал</th>
+            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Партия</th>
+            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Дата поступления</th>
+            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Количество</th>
+            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Категория</th>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">0101</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">1111</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">1111</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">222222</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">1111222444</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">27.12.2023</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">30</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">КСНЗ</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">0101</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">1111</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">1111</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">222222</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">1111222444</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">10.01.2024</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">70</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">Ликвидный</td>
+        </tr>
+    </table>
+    """
+
+    last_sections = """
+    <p>
+        В этом примере часть партии поступила в декабре 2023 года (30 единиц), а часть — в январе 2024 года (70 единиц).
+        При прогнозировании система будет учитывать разные даты поступления и соответствующие категории запаса.
+    </p>
+    
+    <h4>Материалы без даты поступления</h4>
+    <p>
+        В некоторых случаях в данных может отсутствовать информация о дате поступления материала на склад.
+    </p>
+    <p>
+        <b>Обработка:</b> Материалы без даты поступления помечаются специальной категорией "Требует проверки" 
+        и выделяются серым цветом в результатах. Такие материалы требуют дополнительного анализа и уточнения данных.
+    </p>
+    
+    <h4>Отсутствие данных о потреблении</h4>
+    <p>
+        При использовании Метода 1 (с учетом потребности) может отсутствовать информация о дневном потреблении материалов.
+    </p>
+    <p>
+        <b>Обработка:</b> Если колонка "Дневное потребление" отсутствует в исходных данных, система автоматически
+        добавляет ее и заполняет нулевыми значениями. В этом случае прогноз будет строиться исходя из предположения,
+        что материалы не потребляются (аналогично Методу 2).
+    </p>
     
     <div id="formulas" style="margin-top: 40px;">
         <h3>7. Формулы и алгоритмы расчета</h3>
@@ -576,8 +596,8 @@ def get_documentation_content():
         </p>
         
         <h4>Расчет количества дней хранения</h4>
-        <div class="formula-block">
-            <pre class="formula">Дни хранения = Дата прогноза - Дата поступления</pre>
+        <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0 20px 0;">
+            <pre style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; font-family: Consolas, monospace; margin-top: 10px; margin-bottom: 15px;">Дни хранения = Дата прогноза - Дата поступления</pre>
             <p>
                 Этот расчет выполняется для каждого материала на каждую дату прогноза.
                 В результате определяется, сколько дней будет храниться материал к указанной дате прогноза.
@@ -585,8 +605,8 @@ def get_documentation_content():
         </div>
         
         <h4>Определение категории запаса (Метод 1)</h4>
-        <div class="formula-block">
-            <pre class="formula">Если Дни хранения < 275:
+        <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0 20px 0;">
+            <pre style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; font-family: Consolas, monospace; margin-top: 10px; margin-bottom: 15px;">Если Дни хранения < 275:
     Категория = "Ликвидный"
 Иначе если Дни хранения < 366:
     Категория = "КСНЗ"
@@ -597,8 +617,8 @@ def get_documentation_content():
         </div>
         
         <h4>Определение категории запаса (Метод 2)</h4>
-        <div class="formula-block">
-            <pre class="formula">Если Дни хранения < 305:
+        <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0 20px 0;">
+            <pre style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; font-family: Consolas, monospace; margin-top: 10px; margin-bottom: 15px;">Если Дни хранения < 305:
     Категория = "Ликвидный"
 Иначе если Дни хранения < 365:
     Категория = "КСНЗ"
@@ -609,8 +629,8 @@ def get_documentation_content():
         </div>
         
         <h4>Расчет оставшегося количества с учетом потребления (для Метода 1)</h4>
-        <div class="formula-block">
-            <pre class="formula">Дни от текущей даты = Дата прогноза - Текущая дата
+        <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0 20px 0;">
+            <pre style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; font-family: Consolas, monospace; margin-top: 10px; margin-bottom: 15px;">Дни от текущей даты = Дата прогноза - Текущая дата
 Оставшееся количество = Количество обеспечения - (Дневное потребление * Дни от текущей даты)
 Если Оставшееся количество < 0:
     Оставшееся количество = 0</pre>
@@ -638,7 +658,23 @@ def get_documentation_content():
             <li>Формирование сводных и детальных результатов в виде графиков и таблиц.</li>
         </ol>
     </div>
-    </body>
-    </html>
-    '''
-    return documentation
+    """
+    
+    # Объединяем все части документации
+    full_documentation = (
+        documentation + 
+        methods_section + 
+        method1_table +
+        method2_section +
+        method2_table +
+        data_preparation_section +
+        method1_data_table +
+        method2_data_section +
+        method2_data_table +
+        data_notes +
+        remaining_sections +
+        batch_example_table +
+        last_sections
+    )
+    
+    return full_documentation
