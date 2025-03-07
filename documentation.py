@@ -5,7 +5,26 @@ def get_documentation_content():
     Returns:
         str: HTML-разметка с документацией
     """
-    documentation = """
+    documentation = '''
+    <html>
+    <head>
+        <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; }
+            h1, h2, h3, h4 { color: #2B5797; }
+            table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+            th, td { padding: 8px; text-align: left; border: 1px solid #ddd; }
+            th { background-color: #f2f2f2; }
+            .status-box { padding: 10px; border-radius: 5px; margin-bottom: 10px; }
+            .status-likvid { background-color: #00b050; color: white; }
+            .status-ksnz { background-color: #ffbf00; color: black; }
+            .status-snz { background-color: #ff4c4c; color: white; }
+            .status-snz3 { background-color: #c00000; color: white; }
+            .status-check { background-color: #808080; color: white; }
+            pre.formula { background-color: #f5f5f5; padding: 10px; border-radius: 5px; font-family: Consolas, monospace; margin-top: 10px; margin-bottom: 15px; }
+            .formula-block { background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0 20px 0; }
+        </style>
+    </head>
+    <body>
     <h1 style="color: #2B5797; text-align: center;">Руководство пользователя</h1>
     <h2 style="color: #2B5797;">Система прогнозирования сверхнормативных запасов (СНЗ и КСНЗ)</h2>
     
@@ -557,50 +576,50 @@ def get_documentation_content():
         </p>
         
         <h4>Расчет количества дней хранения</h4>
-        <pre style="background-color: #f5f5f5; padding: 10px; border-radius: 5px;">
-Дни хранения = Дата прогноза - Дата поступления
-        </pre>
-        <p>
-            Этот расчет выполняется для каждого материала на каждую дату прогноза.
-            В результате определяется, сколько дней будет храниться материал к указанной дате прогноза.
-        </p>
+        <div class="formula-block">
+            <pre class="formula">Дни хранения = Дата прогноза - Дата поступления</pre>
+            <p>
+                Этот расчет выполняется для каждого материала на каждую дату прогноза.
+                В результате определяется, сколько дней будет храниться материал к указанной дате прогноза.
+            </p>
+        </div>
         
         <h4>Определение категории запаса (Метод 1)</h4>
-        <pre style="background-color: #f5f5f5; padding: 10px; border-radius: 5px;">
-Если Дни хранения < 275:
+        <div class="formula-block">
+            <pre class="formula">Если Дни хранения < 275:
     Категория = "Ликвидный"
 Иначе если Дни хранения < 366:
     Категория = "КСНЗ"
 Иначе если Дни хранения < 1097:
     Категория = "СНЗ"
 Иначе:
-    Категория = "СНЗ > 3 лет"
-        </pre>
+    Категория = "СНЗ > 3 лет"</pre>
+        </div>
         
         <h4>Определение категории запаса (Метод 2)</h4>
-        <pre style="background-color: #f5f5f5; padding: 10px; border-radius: 5px;">
-Если Дни хранения < 305:
+        <div class="formula-block">
+            <pre class="formula">Если Дни хранения < 305:
     Категория = "Ликвидный"
 Иначе если Дни хранения < 365:
     Категория = "КСНЗ"
 Иначе если Дни хранения < 1096:
     Категория = "СНЗ"
 Иначе:
-    Категория = "СНЗ > 3 лет"
-        </pre>
+    Категория = "СНЗ > 3 лет"</pre>
+        </div>
         
         <h4>Расчет оставшегося количества с учетом потребления (для Метода 1)</h4>
-        <pre style="background-color: #f5f5f5; padding: 10px; border-radius: 5px;">
-Дни от текущей даты = Дата прогноза - Текущая дата
+        <div class="formula-block">
+            <pre class="formula">Дни от текущей даты = Дата прогноза - Текущая дата
 Оставшееся количество = Количество обеспечения - (Дневное потребление * Дни от текущей даты)
 Если Оставшееся количество < 0:
-    Оставшееся количество = 0
-        </pre>
-        <p>
-            Этот расчет позволяет учесть потребление материала при прогнозировании. 
-            Если материал полностью израсходуется до даты прогноза, его оставшееся количество будет равно 0,
-            и он не будет учитываться в статистике КСНЗ/СНЗ.
-        </p>
+    Оставшееся количество = 0</pre>
+            <p>
+                Этот расчет позволяет учесть потребление материала при прогнозировании. 
+                Если материал полностью израсходуется до даты прогноза, его оставшееся количество будет равно 0,
+                и он не будет учитываться в статистике КСНЗ/СНЗ.
+            </p>
+        </div>
         
         <h4>Алгоритм прогнозирования</h4>
         <p>
@@ -619,5 +638,7 @@ def get_documentation_content():
             <li>Формирование сводных и детальных результатов в виде графиков и таблиц.</li>
         </ol>
     </div>
-    """
+    </body>
+    </html>
+    '''
     return documentation

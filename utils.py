@@ -1,3 +1,61 @@
+import pandas as pd
+import datetime
+import numpy as np
+from constants import AGING_SCALE_METHOD_1, AGING_SCALE_METHOD_2
+
+def validate_columns(df, required_columns):
+    """
+    Проверка наличия необходимых колонок в DataFrame
+    
+    Args:
+        df: DataFrame для проверки
+        required_columns: Список обязательных колонок
+    
+    Returns:
+        tuple: (True/False, список отсутствующих колонок)
+    """
+    missing_columns = [col for col in required_columns if col not in df.columns]
+    return len(missing_columns) == 0, missing_columns
+
+def calculate_aging_days(date, forecast_date=None):
+    """
+    Расчет количества дней хранения
+    
+    Args:
+        date: Дата поступления материала
+        forecast_date: Дата прогноза (по умолчанию сегодня)
+    
+    Returns:
+        int: Количество дней хранения
+    """
+    if forecast_date is None:
+        forecast_date = datetime.datetime.now()
+    
+    if pd.isna(date):
+        return 10000  # Специальное значение для материалов без даты
+    
+    return (forecast_date - pd.to_datetime(date)).days
+
+def determine_aging_category(days, method=1):
+    """
+    Определение категории старения на основе дней хранения
+    
+    Args:
+        days: Количество дней хранения
+        method: Метод прогнозирования (1 или 2)
+    
+    Returns:
+        dict: Информация о категории старения
+    """
+    scale = AGING_SCALE_METHOD_1 if method == 1 else AGING_SCALE_METHOD_2
+    
+    for category in scale:
+        if category['min_days'] <= days <= category['max_days']:
+            return category
+    
+    # Если не нашли подходящую категорию, возвращаем последнюю (самую старую)
+    return scale[-1]
+
 def generate_sample_data_method1():
     """
     Генерация тестовых данных для Метода 1 (1000 записей)
@@ -5,8 +63,6 @@ def generate_sample_data_method1():
     Returns:
         DataFrame: Тестовые данные
     """
-    import numpy as np
-    
     # Создаем базовые данные
     be_list = ['0101', '0102', '0103', '0104', '0105']
     area_list = ['1000', '2000', '3000', '4000', '5000']
@@ -65,8 +121,6 @@ def generate_sample_data_method2():
     Returns:
         DataFrame: Тестовые данные
     """
-    import numpy as np
-    
     # Создаем базовые данные
     be_list = ['0101', '0102', '0103', '0104', '0105']
     plant_list = ['1111', '2222', '3333', '4444', '5555']
