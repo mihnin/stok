@@ -14,6 +14,7 @@ from data_processors import (
     handle_materials_without_date,
     handle_mixed_batches
 )
+from documentation import get_documentation_content
 
 def main():
     st.set_page_config(
@@ -62,128 +63,169 @@ def main():
     </style>
     """, unsafe_allow_html=True)
     
-    st.markdown('<h1 class="main-header">Система прогнозирования сверхнормативных запасов (СНЗ и КСНЗ)</h1>', unsafe_allow_html=True)
+    # Главные вкладки приложения
+    tab_main, tab_docs = st.tabs(["Прогнозирование", "Документация"])
     
-    # Боковая панель для загрузки файлов и настройки параметров
-    with st.sidebar:
-        st.subheader("Параметры прогнозирования")
-        
-        method = st.radio(
-            "Метод прогнозирования:",
-            [
-                "Метод 1: С учетом потребности",
-                "Метод 2: Без учета потребности (только фактический запас)"
-            ]
-        )
-        
-        data_source = st.radio(
-            "Источник данных:",
-            [
-                "Загрузить Excel файл",
-                "Использовать тестовые данные"
-            ]
-        )
-        
-        if data_source == "Загрузить Excel файл":
-            uploaded_file = st.file_uploader(
-                "Загрузите Excel файл с данными",
-                type=["xlsx", "xls"]
-            )
-        
-        today = datetime.datetime.now().date()
-        end_date = st.date_input(
-            "Дата окончания прогноза:",
-            value=today + datetime.timedelta(days=365),
-            min_value=today,
-            max_value=today + datetime.timedelta(days=1825)  # Максимум 5 лет
-        )
-        
-        step_days = st.number_input(
-            "Шаг прогноза (дни):",
-            min_value=1,
-            max_value=90,
-            value=30
-        )
-        
-        st.markdown("---")
-        
-        st.markdown("""
-        ### Условные обозначения:
-        <div class="status-box status-likvid">Ликвидный запас</div>
-        <div class="status-box status-ksnz">КСНЗ (Критический сверхнормативный запас)</div>
-        <div class="status-box status-snz">СНЗ (Сверхнормативный запас)</div>
-        <div class="status-box status-snz3">СНЗ > 3 лет</div>
-        """, unsafe_allow_html=True)
-        
-        run_forecast = st.button("Рассчитать прогноз", type="primary", use_container_width=True)
+    with tab_docs:
+        doc_content = get_documentation_content()
+        st.markdown(doc_content, unsafe_allow_html=True)
     
-    # Определение источника данных
-    df = None
-    
-    if data_source == "Использовать тестовые данные":
-        if "Метод 1" in method:
-            df = generate_sample_data_method1()
-            st.info("Используются тестовые данные для Метода 1")
-        else:
-            df = generate_sample_data_method2()
-            st.info("Используются тестовые данные для Метода 2")
-    elif data_source == "Загрузить Excel файл" and uploaded_file is not None:
-        try:
-            df = pd.read_excel(uploaded_file)
-            st.success(f"Файл успешно загружен. Количество строк: {len(df)}")
-        except Exception as e:
-            st.error(f"Ошибка при загрузке файла: {str(e)}")
-    
-    # Основная панель
-    if df is not None:
-        # Отображение загруженных данных
-        st.markdown('<h2 class="sub-header">Исходные данные</h2>', unsafe_allow_html=True)
+    with tab_main:
+        st.markdown('<h1 class="main-header">Система прогнозирования сверхнормативных запасов (СНЗ и КСНЗ)</h1>', unsafe_allow_html=True)
         
-        with st.expander("Просмотр исходных данных", expanded=False):
-            st.dataframe(df, use_container_width=True)
-        
-        if run_forecast:
-            st.markdown('<h2 class="sub-header">Результаты прогнозирования</h2>', unsafe_allow_html=True)
+        # Боковая панель для загрузки файлов и настройки параметров
+        with st.sidebar:
+            st.subheader("Параметры прогнозирования")
             
+            method = st.radio(
+                "Метод прогнозирования:",
+                [
+                    "Метод 1: С учетом потребности",
+                    "Метод 2: Без учета потребности (только фактический запас)"
+                ]
+            )
+            
+            data_source = st.radio(
+                "Источник данных:",
+                [
+                    "Загрузить Excel файл",
+                    "Использовать тестовые данные"
+                ]
+            )
+            
+            if data_source == "Загрузить Excel файл":
+                uploaded_file = st.file_uploader(
+                    "Загрузите Excel файл с данными",
+                    type=["xlsx", "xls"]
+                )
+            
+            today = datetime.datetime.now().date()
+            end_date = st.date_input(
+                "Дата окончания прогноза:",
+                value=today + datetime.timedelta(days=365),
+                min_value=today,
+                max_value=today + datetime.timedelta(days=1825)  # Максимум 5 лет
+            )
+            
+            step_days = st.number_input(
+                "Шаг прогноза (дни):",
+                min_value=1,
+                max_value=90,
+                value=30
+            )
+            
+            st.markdown("---")
+            
+            st.markdown("""
+            ### Условные обозначения:
+            <div class="status-box status-likvid">Ликвидный запас</div>
+            <div class="status-box status-ksnz">КСНЗ (Критический сверхнормативный запас)</div>
+            <div class="status-box status-snz">СНЗ (Сверхнормативный запас)</div>
+            <div class="status-box status-snz3">СНЗ > 3 лет</div>
+            """, unsafe_allow_html=True)
+            
+            run_forecast = st.button("Рассчитать прогноз", type="primary", use_container_width=True)
+            
+            # Добавляем кнопку для скачивания примеров данных
+            st.markdown("---")
+            st.subheader("Примеры данных")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                if not os.path.exists('sample_data'):
+                    os.makedirs('sample_data')
+                
+                # Генерация тестовых данных для примеров
+                if not os.path.exists('sample_data/method1_sample.xlsx'):
+                    sample_df1 = generate_sample_data_method1()
+                    sample_df1.to_excel('sample_data/method1_sample.xlsx', index=False)
+                
+                st.download_button(
+                    label="Шаблон для Метода 1",
+                    data=open('sample_data/method1_sample.xlsx', 'rb').read(),
+                    file_name="шаблон_метод1.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
+            
+            with col2:
+                if not os.path.exists('sample_data/method2_sample.xlsx'):
+                    sample_df2 = generate_sample_data_method2()
+                    sample_df2.to_excel('sample_data/method2_sample.xlsx', index=False)
+                
+                st.download_button(
+                    label="Шаблон для Метода 2",
+                    data=open('sample_data/method2_sample.xlsx', 'rb').read(),
+                    file_name="шаблон_метод2.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
+        
+        # Определение источника данных
+        df = None
+        
+        if data_source == "Использовать тестовые данные":
             if "Метод 1" in method:
-                # Проверка необходимых колонок для Метода 1
-                valid, missing_columns = validate_columns(df, METHOD1_REQUIRED_COLUMNS)
+                df = generate_sample_data_method1()
+                st.info("Используются тестовые данные для Метода 1")
+            else:
+                df = generate_sample_data_method2()
+                st.info("Используются тестовые данные для Метода 2")
+        elif data_source == "Загрузить Excel файл" and uploaded_file is not None:
+            try:
+                df = pd.read_excel(uploaded_file)
+                st.success(f"Файл успешно загружен. Количество строк: {len(df)}")
+            except Exception as e:
+                st.error(f"Ошибка при загрузке файла: {str(e)}")
+        
+        # Основная панель
+        if df is not None:
+            # Отображение загруженных данных
+            st.markdown('<h2 class="sub-header">Исходные данные</h2>', unsafe_allow_html=True)
+            
+            with st.expander("Просмотр исходных данных", expanded=False):
+                st.dataframe(df, use_container_width=True)
+            
+            if run_forecast:
+                st.markdown('<h2 class="sub-header">Результаты прогнозирования</h2>', unsafe_allow_html=True)
                 
-                if not valid:
-                    st.error(f"Отсутствуют обязательные колонки: {', '.join(missing_columns)}")
-                else:
-                    # Если нет колонки с дневным потреблением, создаем ее с нулевыми значениями
-                    if 'Дневное потребление' not in df.columns:
-                        st.warning("Колонка 'Дневное потребление' отсутствует. Добавлена с нулевыми значениями.")
-                        df['Дневное потребление'] = 0
+                if "Метод 1" in method:
+                    # Проверка необходимых колонок для Метода 1
+                    valid, missing_columns = validate_columns(df, METHOD1_REQUIRED_COLUMNS)
                     
-                    with st.spinner("Выполняется прогнозирование..."):
-                        # Выполнение прогноза
-                        summary_results, detailed_results = forecast_with_demand(df, end_date, step_days)
-                    
-                    # Отображение результатов
-                    display_results(summary_results, detailed_results, "Метод 1")
-                    
-            else:  # Метод 2
-                # Проверка необходимых колонок для Метода 2
-                valid, missing_columns = validate_columns(df, METHOD2_REQUIRED_COLUMNS)
-                
-                if not valid:
-                    st.error(f"Отсутствуют обязательные колонки: {', '.join(missing_columns)}")
-                else:
-                    with st.spinner("Выполняется прогнозирование..."):
-                        # Обработка особых случаев
-                        df = handle_materials_without_date(df)
-                        df = handle_mixed_batches(df)
+                    if not valid:
+                        st.error(f"Отсутствуют обязательные колонки: {', '.join(missing_columns)}")
+                    else:
+                        # Если нет колонки с дневным потреблением, создаем ее с нулевыми значениями
+                        if 'Дневное потребление' not in df.columns:
+                            st.warning("Колонка 'Дневное потребление' отсутствует. Добавлена с нулевыми значениями.")
+                            df['Дневное потребление'] = 0
                         
-                        # Выполнение прогноза
-                        summary_results, detailed_results = forecast_without_demand(df, end_date, step_days)
+                        with st.spinner("Выполняется прогнозирование..."):
+                            # Выполнение прогноза
+                            summary_results, detailed_results = forecast_with_demand(df, end_date, step_days)
+                        
+                        # Отображение результатов
+                        display_results(summary_results, detailed_results, "Метод 1")
+                        
+                else:  # Метод 2
+                    # Проверка необходимых колонок для Метода 2
+                    valid, missing_columns = validate_columns(df, METHOD2_REQUIRED_COLUMNS)
                     
-                    # Отображение результатов
-                    display_results(summary_results, detailed_results, "Метод 2")
-    else:
-        if data_source == "Загрузить Excel файл":
-            st.info("Пожалуйста, загрузите Excel файл для начала работы.")
+                    if not valid:
+                        st.error(f"Отсутствуют обязательные колонки: {', '.join(missing_columns)}")
+                    else:
+                        with st.spinner("Выполняется прогнозирование..."):
+                            # Обработка особых случаев
+                            df = handle_materials_without_date(df)
+                            df = handle_mixed_batches(df)
+                            
+                            # Выполнение прогноза
+                            summary_results, detailed_results = forecast_without_demand(df, end_date, step_days)
+                        
+                        # Отображение результатов
+                        display_results(summary_results, detailed_results, "Метод 2")
+        else:
+            if data_source == "Загрузить Excel файл":
+                st.info("Пожалуйста, загрузите Excel файл для начала работы.")
 
 def display_results(summary_df, detailed_df, method_name):
     """
