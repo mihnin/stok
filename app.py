@@ -5,6 +5,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import io
 import os
+import base64
 
 from constants import COLOR_CODES, METHOD1_REQUIRED_COLUMNS, METHOD2_REQUIRED_COLUMNS
 from utils import validate_columns, generate_sample_data_method1, generate_sample_data_method2
@@ -14,7 +15,51 @@ from data_processors import (
     handle_materials_without_date,
     handle_mixed_batches
 )
+from visualization import display_results
 from documentation import get_documentation_content
+
+def initialize_session_state():
+    """Initialize session state variables if they don't exist"""
+    if 'uploaded_data' not in st.session_state:
+        st.session_state.uploaded_data = None
+    
+    if 'forecast_summary' not in st.session_state:
+        st.session_state.forecast_summary = None
+    
+    if 'forecast_details' not in st.session_state:
+        st.session_state.forecast_details = None
+        
+    if 'forecast_method' not in st.session_state:
+        st.session_state.forecast_method = "Метод 1: С учетом потребности"
+    
+    if 'forecast_enddate' not in st.session_state:
+        st.session_state.forecast_enddate = datetime.datetime.now().date() + datetime.timedelta(days=365)
+    
+    if 'forecast_step' not in st.session_state:
+        st.session_state.forecast_step = 30
+        
+    if 'data_source' not in st.session_state:
+        st.session_state.data_source = "Загрузить Excel файл"
+        
+    if 'selected_forecast_date' not in st.session_state:
+        st.session_state.selected_forecast_date = None
+        
+    if 'export_type' not in st.session_state:
+        st.session_state.export_type = "Excel (все данные)"
+        
+    if 'last_uploaded_file' not in st.session_state:
+        st.session_state.last_uploaded_file = None
+
+def on_method_change():
+    """Reset uploaded data when method changes"""
+    st.session_state.uploaded_data = None
+    st.session_state.forecast_summary = None
+    st.session_state.forecast_details = None
+    st.session_state.selected_forecast_date = None
+
+def on_file_upload():
+    """Handle file upload"""
+    return
 
 def main():
     st.set_page_config(
@@ -24,7 +69,10 @@ def main():
         initial_sidebar_state="expanded"
     )
     
-    # Настройка темы
+    # Initialize session state
+    initialize_session_state()
+    
+    # Apply CSS
     st.markdown("""
     <style>
     .main-header {
@@ -63,55 +111,76 @@ def main():
     </style>
     """, unsafe_allow_html=True)
     
-    # Главные вкладки приложения
+    # Main tabs
     tab_main, tab_docs = st.tabs(["Прогнозирование", "Документация"])
     
     with tab_docs:
+        # Display documentation directly in the tab
         doc_content = get_documentation_content()
         st.markdown(doc_content, unsafe_allow_html=True)
     
     with tab_main:
         st.markdown('<h1 class="main-header">Система прогнозирования сверхнормативных запасов (СНЗ и КСНЗ)</h1>', unsafe_allow_html=True)
         
-        # Боковая панель для загрузки файлов и настройки параметров
+        # Sidebar
         with st.sidebar:
             st.subheader("Параметры прогнозирования")
             
+            # Method selection with callback
             method = st.radio(
                 "Метод прогнозирования:",
                 [
                     "Метод 1: С учетом потребности",
                     "Метод 2: Без учета потребности (только фактический запас)"
-                ]
+                ],
+                on_change=on_method_change,
+                key="forecast_method"
             )
+            
+            # Show appropriate template info based on selected method
+            if "Метод 1" in method:
+                st.info("Для данного метода используйте шаблон для Метода 1 (с учетом потребности)")
+            else:
+                st.info("Для данного метода используйте шаблон для Метода 2 (без учета потребности)")
             
             data_source = st.radio(
                 "Источник данных:",
                 [
                     "Загрузить Excel файл",
                     "Использовать тестовые данные"
-                ]
+                ],
+                key="data_source"
             )
             
             if data_source == "Загрузить Excel файл":
                 uploaded_file = st.file_uploader(
                     "Загрузите Excel файл с данными",
-                    type=["xlsx", "xls"]
+                    type=["xlsx", "xls"],
+                    key="file_uploader"
                 )
+                
+                if uploaded_file is not None:
+                    try:
+                        df = pd.read_excel(uploaded_file)
+                        st.session_state.uploaded_data = df
+                    except Exception as e:
+                        st.error(f"Ошибка при загрузке файла: {str(e)}")
             
             today = datetime.datetime.now().date()
             end_date = st.date_input(
                 "Дата окончания прогноза:",
-                value=today + datetime.timedelta(days=365),
+                value=st.session_state.forecast_enddate,
                 min_value=today,
-                max_value=today + datetime.timedelta(days=1825)  # Максимум 5 лет
+                max_value=today + datetime.timedelta(days=1825),  # Max 5 years
+                key="forecast_enddate"
             )
             
             step_days = st.number_input(
                 "Шаг прогноза (дни):",
                 min_value=1,
                 max_value=90,
-                value=30
+                value=st.session_state.forecast_step,
+                key="forecast_step"
             )
             
             st.markdown("---")
@@ -126,16 +195,17 @@ def main():
             
             run_forecast = st.button("Рассчитать прогноз", type="primary", use_container_width=True)
             
-            # Добавляем кнопку для скачивания примеров данных
+            # Sample data download
             st.markdown("---")
-            st.subheader("Примеры данных")
+            st.subheader("Шаблоны данных")
+            
+            # Create sample data directory if it doesn't exist
+            if not os.path.exists('sample_data'):
+                os.makedirs('sample_data')
             
             col1, col2 = st.columns(2)
             with col1:
-                if not os.path.exists('sample_data'):
-                    os.makedirs('sample_data')
-                
-                # Генерация тестовых данных для примеров
+                # Generate sample data if not exists
                 if not os.path.exists('sample_data/method1_sample.xlsx'):
                     sample_df1 = generate_sample_data_method1()
                     sample_df1.to_excel('sample_data/method1_sample.xlsx', index=False)
@@ -159,284 +229,100 @@ def main():
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
         
-        # Определение источника данных
+        # Define data source
         df = None
         
         if data_source == "Использовать тестовые данные":
             if "Метод 1" in method:
                 df = generate_sample_data_method1()
+                st.session_state.uploaded_data = df
                 st.info("Используются тестовые данные для Метода 1")
             else:
                 df = generate_sample_data_method2()
+                st.session_state.uploaded_data = df
                 st.info("Используются тестовые данные для Метода 2")
-        elif data_source == "Загрузить Excel файл" and uploaded_file is not None:
-            try:
-                df = pd.read_excel(uploaded_file)
-                st.success(f"Файл успешно загружен. Количество строк: {len(df)}")
-            except Exception as e:
-                st.error(f"Ошибка при загрузке файла: {str(e)}")
+        elif data_source == "Загрузить Excel файл" and st.session_state.uploaded_data is not None:
+            df = st.session_state.uploaded_data
+            st.success(f"Файл успешно загружен. Количество строк: {len(df)}")
         
-        # Основная панель
+        # Main panel
         if df is not None:
-            # Отображение загруженных данных
+            # Display loaded data
             st.markdown('<h2 class="sub-header">Исходные данные</h2>', unsafe_allow_html=True)
             
             with st.expander("Просмотр исходных данных", expanded=False):
                 st.dataframe(df, use_container_width=True)
             
-            if run_forecast:
+            # Check if uploaded file matches selected method
+            if "Метод 1" in method:
+                valid, missing_columns = validate_columns(df, METHOD1_REQUIRED_COLUMNS)
+                if not valid:
+                    st.error(f"Загруженный файл не соответствует Методу 1. Отсутствуют обязательные колонки: {', '.join(missing_columns)}")
+                    st.warning("Пожалуйста, загрузите файл, соответствующий выбранному методу")
+                    df = None
+            else:
+                valid, missing_columns = validate_columns(df, METHOD2_REQUIRED_COLUMNS)
+                if not valid:
+                    st.error(f"Загруженный файл не соответствует Методу 2. Отсутствуют обязательные колонки: {', '.join(missing_columns)}")
+                    st.warning("Пожалуйста, загрузите файл, соответствующий выбранному методу")
+                    df = None
+            
+            if df is not None and run_forecast:
                 st.markdown('<h2 class="sub-header">Результаты прогнозирования</h2>', unsafe_allow_html=True)
                 
                 if "Метод 1" in method:
-                    # Проверка необходимых колонок для Метода 1
-                    valid, missing_columns = validate_columns(df, METHOD1_REQUIRED_COLUMNS)
+                    # If no daily consumption column, create it with zeros
+                    if 'Дневное потребление' not in df.columns:
+                        st.warning("Колонка 'Дневное потребление' отсутствует. Добавлена с нулевыми значениями.")
+                        df['Дневное потребление'] = 0
                     
-                    if not valid:
-                        st.error(f"Отсутствуют обязательные колонки: {', '.join(missing_columns)}")
-                    else:
-                        # Если нет колонки с дневным потреблением, создаем ее с нулевыми значениями
-                        if 'Дневное потребление' not in df.columns:
-                            st.warning("Колонка 'Дневное потребление' отсутствует. Добавлена с нулевыми значениями.")
-                            df['Дневное потребление'] = 0
+                    with st.spinner("Выполняется прогнозирование..."):
+                        # Run forecast
+                        summary_results, detailed_results = forecast_with_demand(df, end_date, step_days)
                         
-                        with st.spinner("Выполняется прогнозирование..."):
-                            # Выполнение прогноза
-                            summary_results, detailed_results = forecast_with_demand(df, end_date, step_days)
+                        # Save results to session state
+                        st.session_state.forecast_summary = summary_results
+                        st.session_state.forecast_details = detailed_results
                         
-                        # Отображение результатов
-                        display_results(summary_results, detailed_results, "Метод 1")
-                        
-                else:  # Метод 2
-                    # Проверка необходимых колонок для Метода 2
-                    valid, missing_columns = validate_columns(df, METHOD2_REQUIRED_COLUMNS)
+                        # Set initial selected date if not already set
+                        if st.session_state.selected_forecast_date is None:
+                            all_dates = detailed_results['Дата прогноза'].dt.strftime('%Y-%m-%d').unique()
+                            if len(all_dates) > 0:
+                                st.session_state.selected_forecast_date = all_dates[0]
                     
-                    if not valid:
-                        st.error(f"Отсутствуют обязательные колонки: {', '.join(missing_columns)}")
-                    else:
-                        with st.spinner("Выполняется прогнозирование..."):
-                            # Обработка особых случаев
-                            df = handle_materials_without_date(df)
-                            df = handle_mixed_batches(df)
-                            
-                            # Выполнение прогноза
-                            summary_results, detailed_results = forecast_without_demand(df, end_date, step_days)
+                    # Display results
+                    display_results(summary_results, detailed_results, "Метод 1")
+                    
+                else:  # Method 2
+                    with st.spinner("Выполняется прогнозирование..."):
+                        # Handle special cases
+                        df = handle_materials_without_date(df)
+                        df = handle_mixed_batches(df)
                         
-                        # Отображение результатов
-                        display_results(summary_results, detailed_results, "Метод 2")
+                        # Run forecast
+                        summary_results, detailed_results = forecast_without_demand(df, end_date, step_days)
+                        
+                        # Save results to session state
+                        st.session_state.forecast_summary = summary_results
+                        st.session_state.forecast_details = detailed_results
+                        
+                        # Set initial selected date if not already set
+                        if st.session_state.selected_forecast_date is None:
+                            all_dates = detailed_results['Дата прогноза'].dt.strftime('%Y-%m-%d').unique()
+                            if len(all_dates) > 0:
+                                st.session_state.selected_forecast_date = all_dates[0]
+                    
+                    # Display results
+                    display_results(summary_results, detailed_results, "Метод 2")
+            
+            # Display previous forecast results if they exist
+            elif st.session_state.forecast_summary is not None and st.session_state.forecast_details is not None:
+                st.markdown('<h2 class="sub-header">Результаты прогнозирования</h2>', unsafe_allow_html=True)
+                display_results(st.session_state.forecast_summary, st.session_state.forecast_details, 
+                                "Метод 1" if "Метод 1" in method else "Метод 2")
         else:
             if data_source == "Загрузить Excel файл":
                 st.info("Пожалуйста, загрузите Excel файл для начала работы.")
-
-def display_results(summary_df, detailed_df, method_name):
-    """
-    Отображение результатов прогнозирования
-    
-    Args:
-        summary_df: Сводные результаты прогноза
-        detailed_df: Детальные результаты прогноза
-        method_name: Название метода прогнозирования
-    """
-    # Создание трех вкладок для разных типов результатов
-    tab1, tab2, tab3 = st.tabs(["Динамика запасов", "Таблица сводных результатов", "Детальные результаты"])
-    
-    with tab1:
-        st.markdown('<h3 class="sub-header">Динамика изменения объемов по категориям</h3>', unsafe_allow_html=True)
-        
-        # Подготовка данных для графика
-        value_column = 'Оставшееся количество' if 'Оставшееся количество' in summary_df.columns else 'Фактический запас'
-        
-        pivot_df = summary_df.pivot_table(
-            index='Дата прогноза',
-            columns='Категория',
-            values=value_column,
-            aggfunc='sum'
-        ).fillna(0).reset_index()
-        
-        # Создание графика
-        fig = go.Figure()
-        
-        # Добавление линий для каждой категории
-        categories_order = ["Ликвидный", "КСНЗ", "СНЗ", "СНЗ > 3 лет", "Требует проверки"]
-        
-        for category in categories_order:
-            if category in pivot_df.columns:
-                fig.add_trace(go.Scatter(
-                    x=pivot_df['Дата прогноза'],
-                    y=pivot_df[category],
-                    mode='lines+markers',
-                    name=category,
-                    line=dict(color=COLOR_CODES.get(category, '#808080'), width=3),
-                    marker=dict(size=8)
-                ))
-        
-        # Настройка внешнего вида графика
-        fig.update_layout(
-            title=f"Прогноз изменения объемов запасов по категориям ({method_name})",
-            xaxis_title="Дата прогноза",
-            yaxis_title=f"Объем запасов ({value_column})",
-            legend_title="Категория запаса",
-            hovermode="x unified",
-            height=600,
-            template="plotly_white"
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # Создание графика в виде области
-        fig_area = go.Figure()
-        
-        # Добавление областей для каждой категории
-        for category in categories_order:
-            if category in pivot_df.columns:
-                # Use rgba() format for colors with transparency
-                base_color = COLOR_CODES.get(category, '#808080')
-                # Convert hex to rgba with 0.5 opacity
-                if base_color.startswith('#'):
-                    r = int(base_color[1:3], 16)
-                    g = int(base_color[3:5], 16)
-                    b = int(base_color[5:7], 16)
-                    rgba_color = f'rgba({r},{g},{b},0.5)'
-                else:
-                    rgba_color = base_color
-                
-                fig_area.add_trace(go.Scatter(
-                    x=pivot_df['Дата прогноза'],
-                    y=pivot_df[category],
-                    mode='none',
-                    name=category,
-                    fill='tonexty',
-                    fillcolor=rgba_color,
-                    line=dict(width=0)
-                ))
-        
-        # Настройка внешнего вида графика
-        fig_area.update_layout(
-            title=f"Структура запасов по категориям ({method_name})",
-            xaxis_title="Дата прогноза",
-            yaxis_title=f"Объем запасов ({value_column})",
-            legend_title="Категория запаса",
-            hovermode="x unified",
-            height=500,
-            template="plotly_white"
-        )
-        
-        st.plotly_chart(fig_area, use_container_width=True)
-    
-    with tab2:
-        st.markdown('<h3 class="sub-header">Сводная таблица результатов прогноза</h3>', unsafe_allow_html=True)
-        
-        # Форматирование таблицы с результатами
-        formatted_summary = summary_df.copy()
-        
-        # Преобразовать 'Дата прогноза' в читаемый формат
-        formatted_summary['Дата прогноза'] = formatted_summary['Дата прогноза'].dt.strftime('%Y-%m-%d')
-        
-        # Ensure unique index for styling
-        formatted_summary = formatted_summary.reset_index(drop=True)
-        
-        # Create a color mapping for each row based on category
-        def color_rows(row):
-            color = COLOR_CODES.get(row['Категория'], '#808080')
-            text_color = 'black' if row['Категория'] in ['Ликвидный', 'КСНЗ'] else 'white'
-            return [f'background-color: {color}; color: {text_color}'] * len(row)
-        
-        # Display with styling
-        st.dataframe(formatted_summary.style.apply(color_rows, axis=1), use_container_width=True)
-    
-    with tab3:
-        st.markdown('<h3 class="sub-header">Детальные результаты по материалам</h3>', unsafe_allow_html=True)
-        
-        # Добавляем фильтр по дате прогноза
-        all_dates = detailed_df['Дата прогноза'].dt.strftime('%Y-%m-%d').unique()
-        selected_date = st.selectbox("Выберите дату прогноза:", all_dates)
-        
-        # Фильтруем данные по выбранной дате
-        filtered_df = detailed_df[detailed_df['Дата прогноза'].dt.strftime('%Y-%m-%d') == selected_date].copy()
-        
-        # Форматирование даты для отображения
-        if 'Дата поступления' in filtered_df.columns:
-            filtered_df['Дата поступления'] = filtered_df['Дата поступления'].dt.strftime('%Y-%m-%d')
-        if 'Дата поступления на склад' in filtered_df.columns:
-            filtered_df['Дата поступления на склад'] = filtered_df['Дата поступления на склад'].dt.strftime('%Y-%m-%d')
-        filtered_df['Дата прогноза'] = filtered_df['Дата прогноза'].dt.strftime('%Y-%m-%d')
-        
-        # Удаляем колонки, которые не нужны для отображения
-        display_columns = [col for col in filtered_df.columns if col not in ['Дата прогноза']]
-        
-        # Ensure unique index for styling
-        display_df = filtered_df[display_columns].reset_index(drop=True)
-        
-        # Create a color mapping for each row based on category
-        def color_rows_detailed(row):
-            color = COLOR_CODES.get(row['Категория'], '#808080')
-            text_color = 'black' if row['Категория'] in ['Ликвидный', 'КСНЗ'] else 'white'
-            return [f'background-color: {color}; color: {text_color}'] * len(row)
-            
-        # Display with styling
-        st.dataframe(display_df.style.apply(color_rows_detailed, axis=1), use_container_width=True)
-    
-    # Добавляем кнопку экспорта результатов
-    st.markdown('<h3 class="sub-header">Экспорт результатов</h3>', unsafe_allow_html=True)
-    
-    export_type = st.radio(
-        "Формат экспорта:",
-        ["Excel (все данные)", "Excel (только сводные данные)"],
-        horizontal=True
-    )
-    
-    # Создаем Excel файл в памяти
-    output = io.BytesIO()
-    
-    if export_type == "Excel (все данные)":
-        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-            summary_df.to_excel(writer, sheet_name='Сводные результаты', index=False)
-            
-            # Разбиваем детальные результаты по датам
-            for date in detailed_df['Дата прогноза'].dt.strftime('%Y-%m-%d').unique():
-                sheet_name = f"Детали_{date}"
-                date_df = detailed_df[detailed_df['Дата прогноза'].dt.strftime('%Y-%m-%d') == date]
-                date_df.to_excel(writer, sheet_name=sheet_name[:31], index=False)  # Excel ограничивает имя листа 31 символом
-            
-            # Добавляем сводную таблицу
-            pivot_df.to_excel(writer, sheet_name='Сводная таблица')
-            
-            # Настройка форматирования для рабочей книги
-            workbook = writer.book
-            worksheet = writer.sheets['Сводные результаты']
-            
-            # Добавляем форматы для категорий
-            for category, color in COLOR_CODES.items():
-                category_format = workbook.add_format({'bg_color': color})
-                
-                # Применяем условное форматирование
-                worksheet.conditional_format('B2:B1000', {'type': 'text',
-                                                        'criteria': 'containing',
-                                                        'value': category,
-                                                        'format': category_format})
-    else:
-        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-            summary_df.to_excel(writer, sheet_name='Сводные результаты', index=False)
-            pivot_df.to_excel(writer, sheet_name='Сводная таблица')
-            
-            # Настройка форматирования
-            workbook = writer.book
-            worksheet = writer.sheets['Сводные результаты']
-            
-            for category, color in COLOR_CODES.items():
-                category_format = workbook.add_format({'bg_color': color})
-                worksheet.conditional_format('B2:B1000', {'type': 'text',
-                                                        'criteria': 'containing',
-                                                        'value': category,
-                                                        'format': category_format})
-    
-    # Предлагаем скачать файл
-    st.download_button(
-        label="Скачать результаты в Excel",
-        data=output.getvalue(),
-        file_name=f"прогноз_снз_кснз_{datetime.datetime.now().strftime('%Y-%m-%d')}.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        use_container_width=True
-    )
 
 if __name__ == "__main__":
     main()

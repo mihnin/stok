@@ -1,680 +1,392 @@
-def get_documentation_content():
+import streamlit as st
+
+def show_help_page():
     """
-    Возвращает содержимое документации по работе с приложением
-    
-    Returns:
-        str: HTML-разметка с документацией
+    Отображает страницу помощи/документации в интерфейсе Streamlit
     """
-    documentation = """
-    <h1 style="color: #2B5797; text-align: center;">Руководство пользователя</h1>
-    <h2 style="color: #2B5797;">Система прогнозирования сверхнормативных запасов (СНЗ и КСНЗ)</h2>
+    st.title("📚 Руководство пользователя")
+    st.header("🧮 Система прогнозирования сверхнормативных запасов (СНЗ и КСНЗ)")
     
-    <div style="margin-top: 20px;">
-        <h3>Содержание</h3>
-        <ol>
-            <li><a href="#overview">Общее описание системы</a></li>
-            <li><a href="#methods">Методы прогнозирования</a></li>
-            <li><a href="#data-preparation">Подготовка данных</a></li>
-            <li><a href="#usage">Работа с приложением</a></li>
-            <li><a href="#results">Интерпретация результатов</a></li>
-            <li><a href="#special-cases">Особые случаи и обработка исключений</a></li>
-            <li><a href="#formulas">Формулы и алгоритмы расчета</a></li>
-        </ol>
-    </div>
+    # Оглавление в сайдбаре
+    with st.sidebar:
+        st.markdown("### 📑 Содержание")
+        toc_selection = st.radio(
+            "Перейти к разделу:",
+            ["Общее описание системы", 
+             "Методы прогнозирования", 
+             "Подготовка данных", 
+             "Работа с приложением", 
+             "Интерпретация результатов", 
+             "Особые случаи и обработка исключений", 
+             "Формулы и алгоритмы расчета"],
+            label_visibility="collapsed"
+        )
     
-    <div id="overview" style="margin-top: 40px;">
-        <h3>1. Общее описание системы</h3>
-        <p>
-            Система прогнозирования сверхнормативных запасов (СНЗ и КСНЗ) предназначена для анализа и прогнозирования уровня складских запасов, 
-            которые в будущем могут быть квалифицированы как критические (КСНЗ) или сверхнормативные (СНЗ).
-        </p>
-        <p>
-            Система позволяет определить, когда конкретный материал перейдет в статус КСНЗ или СНЗ, если не будет использован, 
-            что дает возможность заблаговременно принять меры по вовлечению материала в производство, предотвращая его переход в категорию неликвидов.
-        </p>
-        <p>
-            <b>Основные термины:</b>
-        </p>
-        <ul>
-            <li><b>Ликвидный запас</b> — запас, хранящийся на складе менее определенного периода (обычно до 9 месяцев для Метода 1 и до 10 месяцев для Метода 2).</li>
-            <li><b>КСНЗ (Критический сверхнормативный запас)</b> — запас, который находится на грани перехода в сверхнормативный (обычно от 9-10 месяцев до 1 года).</li>
-            <li><b>СНЗ (Сверхнормативный запас)</b> — запас, хранящийся на складе дольше допустимого срока (более 1 года до 3 лет).</li>
-            <li><b>СНЗ > 3 лет</b> — запас, хранящийся на складе более 3 лет, который с высокой вероятностью требует списания.</li>
-        </ul>
-    </div>
-    """
+    # Основное содержимое справки
+    tabs = st.tabs([
+        "📋 Общее описание", 
+        "📊 Методы прогнозирования", 
+        "🗃️ Подготовка данных",
+        "🛠️ Работа с приложением",
+        "📈 Результаты",
+        "⚠️ Особые случаи",
+        "🧮 Формулы и алгоритмы"
+    ])
     
-    methods_section = """
-    <div id="methods" style="margin-top: 40px;">
-        <h3>2. Методы прогнозирования</h3>
-        <p>
-            В системе реализованы два метода прогнозирования:
-        </p>
+    # Переключение на выбранную вкладку
+    tab_map = {
+        "Общее описание системы": 0,
+        "Методы прогнозирования": 1,
+        "Подготовка данных": 2,
+        "Работа с приложением": 3,
+        "Интерпретация результатов": 4,
+        "Особые случаи и обработка исключений": 5,
+        "Формулы и алгоритмы расчета": 6
+    }
+    
+    # Переключаемся на выбранную вкладку из сайдбара
+    selected_tab = tab_map[toc_selection]
+    
+    # 1. Общее описание системы
+    with tabs[0]:
+        st.header("🏭 1. Общее описание системы")
+        st.write("""
+        Система прогнозирования сверхнормативных запасов (СНЗ и КСНЗ) предназначена для анализа и прогнозирования уровня складских запасов, 
+        которые в будущем могут быть квалифицированы как критические (КСНЗ) или сверхнормативные (СНЗ).
         
-        <h4>Метод 1: Прогноз с учетом потребности</h4>
-        <p>
-            Этот метод использует данные о текущем запасе и прогнозируемой потребности для определения, 
-            когда материалы перейдут в категорию КСНЗ или СНЗ, если потребление будет происходить согласно прогнозу.
-        </p>
-        <p>
-            <b>Шкала старения для Метода 1:</b>
-        </p>
-    </div>
-    """
-    
-    # Таблица для Метода 1
-    method1_table = """
-    <table style="border-collapse: collapse; width: 100%; margin-top: 20px;">
-        <tr style="background-color: #f2f2f2;">
-            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Интервалы шкалы старения</th>
-            <th style="padding: 8px; text-align: center; border: 1px solid #ddd;">Нижняя граница (дни)</th>
-            <th style="padding: 8px; text-align: center; border: 1px solid #ddd;">Верхняя граница (дни)</th>
-            <th style="padding: 8px; text-align: center; border: 1px solid #ddd;">Категория запаса</th>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">< 1 месяца</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">0</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">30</td>
-            <td style="padding: 8px; text-align: center; background-color: #00b050; color: white; border: 1px solid #ddd;">Ликвидный</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">1-3 месяцев</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">31</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">91</td>
-            <td style="padding: 8px; text-align: center; background-color: #00b050; color: white; border: 1px solid #ddd;">Ликвидный</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">3-6 месяцев</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">92</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">183</td>
-            <td style="padding: 8px; text-align: center; background-color: #00b050; color: white; border: 1px solid #ddd;">Ликвидный</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">6-9 месяцев</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">184</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">274</td>
-            <td style="padding: 8px; text-align: center; background-color: #00b050; color: white; border: 1px solid #ddd;">Ликвидный</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">9-12 месяцев</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">275</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">365</td>
-            <td style="padding: 8px; text-align: center; background-color: #ffbf00; border: 1px solid #ddd;">КСНЗ</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">12-18 месяцев</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">366</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">548</td>
-            <td style="padding: 8px; text-align: center; background-color: #ff4c4c; color: white; border: 1px solid #ddd;">СНЗ</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">18-24 месяца</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">549</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">730</td>
-            <td style="padding: 8px; text-align: center; background-color: #ff4c4c; color: white; border: 1px solid #ddd;">СНЗ</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">2-3 года</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">731</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">1096</td>
-            <td style="padding: 8px; text-align: center; background-color: #ff4c4c; color: white; border: 1px solid #ddd;">СНЗ</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">3-4 года</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">1097</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">1461</td>
-            <td style="padding: 8px; text-align: center; background-color: #c00000; color: white; border: 1px solid #ddd;">СНЗ > 3 лет</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">4-5 лет</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">1462</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">1826</td>
-            <td style="padding: 8px; text-align: center; background-color: #c00000; color: white; border: 1px solid #ddd;">СНЗ > 3 лет</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">>5 лет</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">1827</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">9999</td>
-            <td style="padding: 8px; text-align: center; background-color: #c00000; color: white; border: 1px solid #ddd;">СНЗ > 3 лет</td>
-        </tr>
-    </table>
-    """
-    
-    method2_section = """
-    <div style="margin-top: 20px;">
-        <h4>Метод 2: Прогноз без учета потребности (только фактический запас)</h4>
-        <p>
-            Этот метод основан только на текущем фактическом запасе на складе, без учета потребности и планируемого обеспечения. 
-            Он показывает, когда материалы перейдут в категорию КСНЗ или СНЗ, если не будут использованы вообще.
-        </p>
-        <p>
-            <b>Шкала старения для Метода 2:</b>
-        </p>
-    </div>
-    """
-    
-    # Таблица для Метода 2
-    method2_table = """
-    <table style="border-collapse: collapse; width: 100%; margin-top: 20px;">
-        <tr style="background-color: #f2f2f2;">
-            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Интервалы шкалы старения</th>
-            <th style="padding: 8px; text-align: center; border: 1px solid #ddd;">Нижняя граница (дни)</th>
-            <th style="padding: 8px; text-align: center; border: 1px solid #ddd;">Верхняя граница (дни)</th>
-            <th style="padding: 8px; text-align: center; border: 1px solid #ddd;">Категория запаса</th>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">< 1 месяца</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">0</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">29</td>
-            <td style="padding: 8px; text-align: center; background-color: #00b050; color: white; border: 1px solid #ddd;">Ликвидный</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">1 месяц</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">30</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">59</td>
-            <td style="padding: 8px; text-align: center; background-color: #00b050; color: white; border: 1px solid #ddd;">Ликвидный</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">2 месяца</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">60</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">90</td>
-            <td style="padding: 8px; text-align: center; background-color: #00b050; color: white; border: 1px solid #ddd;">Ликвидный</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">3 месяца</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">91</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">121</td>
-            <td style="padding: 8px; text-align: center; background-color: #00b050; color: white; border: 1px solid #ddd;">Ликвидный</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">4 месяца</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">122</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">152</td>
-            <td style="padding: 8px; text-align: center; background-color: #00b050; color: white; border: 1px solid #ddd;">Ликвидный</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">5 месяцев</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">153</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">182</td>
-            <td style="padding: 8px; text-align: center; background-color: #00b050; color: white; border: 1px solid #ddd;">Ликвидный</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">6 месяцев</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">183</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">213</td>
-            <td style="padding: 8px; text-align: center; background-color: #00b050; color: white; border: 1px solid #ddd;">Ликвидный</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">7 месяцев</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">214</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">244</td>
-            <td style="padding: 8px; text-align: center; background-color: #00b050; color: white; border: 1px solid #ddd;">Ликвидный</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">8 месяцев</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">245</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">273</td>
-            <td style="padding: 8px; text-align: center; background-color: #00b050; color: white; border: 1px solid #ddd;">Ликвидный</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">9 месяцев</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">274</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">304</td>
-            <td style="padding: 8px; text-align: center; background-color: #00b050; color: white; border: 1px solid #ddd;">Ликвидный</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">10 месяцев</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">305</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">334</td>
-            <td style="padding: 8px; text-align: center; background-color: #ffbf00; border: 1px solid #ddd;">КСНЗ</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">11 месяцев</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">335</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">364</td>
-            <td style="padding: 8px; text-align: center; background-color: #ffbf00; border: 1px solid #ddd;">КСНЗ</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">12-18 месяцев</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">365</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">547</td>
-            <td style="padding: 8px; text-align: center; background-color: #ff4c4c; color: white; border: 1px solid #ddd;">СНЗ</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">18-24 месяца</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">548</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">1095</td>
-            <td style="padding: 8px; text-align: center; background-color: #ff4c4c; color: white; border: 1px solid #ddd;">СНЗ</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">> 3 лет</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">1096</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">9999</td>
-            <td style="padding: 8px; text-align: center; background-color: #c00000; color: white; border: 1px solid #ddd;">СНЗ > 3 лет</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">Без даты в SAP ERP</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">≥ 10000</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">-</td>
-            <td style="padding: 8px; text-align: center; background-color: #808080; color: white; border: 1px solid #ddd;">Требует проверки</td>
-        </tr>
-    </table>
-    """
-    
-    data_preparation_section = """
-    <div id="data-preparation" style="margin-top: 40px;">
-        <h3>3. Подготовка данных</h3>
-        <p>
-            Для работы с системой прогнозирования требуется подготовить исходные данные в формате Excel или CSV. 
-            Требования к данным различаются в зависимости от выбранного метода прогнозирования.
-        </p>
+        Система позволяет определить, когда конкретный материал перейдет в статус КСНЗ или СНЗ, если не будет использован, 
+        что дает возможность заблаговременно принять меры по вовлечению материала в производство, предотвращая его переход в категорию неликвидов.
+        """)
         
-        <h4>Для Метода 1: Прогноз с учетом потребности</h4>
-        <p>
-            Необходимый формат данных (отчет ZMML_REP_RD):
-        </p>
-    </div>
-    """
-    
-    method1_data_table = """
-    <table style="border-collapse: collapse; width: 100%; margin-top: 20px;">
-        <tr style="background-color: #f2f2f2;">
-            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Колонка</th>
-            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Описание</th>
-            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Обязательность</th>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">БЕ</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">Бизнес-единица</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">Обязательно</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">Область планирования</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">Область планирования</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">Обязательно</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">Материал</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">Код материала</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">Обязательно</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">Количество обеспечения</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">Текущее количество на складе</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">Обязательно</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">Дата поступления</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">Историческая дата поступления или дата поступления на склад</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">Обязательно</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">Дневное потребление</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">Среднее дневное потребление материала</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">Опционально (если не указано, будет считаться равным 0)</td>
-        </tr>
-    </table>
-    """
-    
-    method2_data_section = """
-    <div style="margin-top: 20px;">
-        <h4>Для Метода 2: Прогноз без учета потребности</h4>
-        <p>
-            Необходимый формат данных (отчет MB52):
-        </p>
-    </div>
-    """
-    
-    method2_data_table = """
-    <table style="border-collapse: collapse; width: 100%; margin-top: 20px;">
-        <tr style="background-color: #f2f2f2;">
-            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Колонка</th>
-            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Описание</th>
-            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Обязательность</th>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">БЕ</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">Бизнес-единица</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">Обязательно</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">Завод</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">Код завода</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">Обязательно</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">Склад</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">Код склада</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">Обязательно</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">Материал</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">Код материала</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">Обязательно</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">Партия</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">Номер партии</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">Обязательно</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">СПП элемент</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">СПП элемент</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">Обязательно (может быть пустым)</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">Дата поступления на склад</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">Дата поступления материала на склад</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">Обязательно</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">Фактический запас</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">Текущее количество на складе</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">Обязательно</td>
-        </tr>
-    </table>
-    """
-    
-    data_notes = """
-    <div style="margin-top: 20px;">
-        <p>
-            <b>Важно:</b> Даты в исходных данных должны быть в формате, который может быть распознан как дата (например, YYYY-MM-DD, DD.MM.YYYY).
-            Числовые данные (количество, потребление) должны быть представлены в виде чисел, а не текста.
-        </p>
+        st.subheader("Основные термины:")
         
-        <p>
-            Вы можете скачать примеры шаблонов данных для обоих методов с помощью кнопок в боковой панели приложения.
-        </p>
-    </div>
-    """
-    
-    # Остальные разделы документации
-    remaining_sections = """
-    <div id="usage" style="margin-top: 40px;">
-        <h3>4. Работа с приложением</h3>
-        <p>
-            Для работы с системой прогнозирования СНЗ и КСНЗ выполните следующие шаги:
-        </p>
+        col1, col2 = st.columns(2)
         
-        <h4>Шаг 1: Выбор метода прогнозирования</h4>
-        <p>
+        with col1:
+            st.info("**🟢 Ликвидный запас** — запас, хранящийся на складе менее определенного периода (обычно до 9 месяцев для Метода 1 и до 10 месяцев для Метода 2).")
+            st.warning("**🟡 КСНЗ (Критический сверхнормативный запас)** — запас, который находится на грани перехода в сверхнормативный (обычно от 9-10 месяцев до 1 года).")
+        
+        with col2:
+            st.error("**🔴 СНЗ (Сверхнормативный запас)** — запас, хранящийся на складе дольше допустимого срока (более 1 года до 3 лет).")
+            st.error("**🔴 СНЗ > 3 лет** — запас, хранящийся на складе более 3 лет, который с высокой вероятностью требует списания.")
+
+    # 2. Методы прогнозирования
+    with tabs[1]:
+        st.header("📊 2. Методы прогнозирования")
+        st.write("В системе реализованы два метода прогнозирования:")
+        
+        st.subheader("Метод 1: 📥 Прогноз с учетом потребности")
+        st.write("""
+        Этот метод использует данные о текущем запасе и прогнозируемой потребности для определения, 
+        когда материалы перейдут в категорию КСНЗ или СНЗ, если потребление будет происходить согласно прогнозу.
+        """)
+        
+        st.write("**Шкала старения для Метода 1:**")
+        
+        # Таблица для Метода 1
+        data_method1 = {
+            "Интервалы шкалы старения": ["< 1 месяца", "1-3 месяцев", "3-6 месяцев", "6-9 месяцев", 
+                                    "9-12 месяцев", "12-18 месяцев", "18-24 месяца", "2-3 года", 
+                                    "3-4 года", "4-5 лет", ">5 лет"],
+            "Нижняя граница (дни)": [0, 31, 92, 184, 275, 366, 549, 731, 1097, 1462, 1827],
+            "Верхняя граница (дни)": [30, 91, 183, 274, 365, 548, 730, 1096, 1461, 1826, 9999],
+            "Категория запаса": ["Ликвидный", "Ликвидный", "Ликвидный", "Ликвидный", 
+                               "КСНЗ", "СНЗ", "СНЗ", "СНЗ", 
+                               "СНЗ > 3 лет", "СНЗ > 3 лет", "СНЗ > 3 лет"]
+        }
+        
+        st.dataframe(data_method1, use_container_width=True)
+        
+        st.subheader("Метод 2: 📤 Прогноз без учета потребности (только фактический запас)")
+        st.write("""
+        Этот метод основан только на текущем фактическом запасе на складе, без учета потребности и планируемого обеспечения. 
+        Он показывает, когда материалы перейдут в категорию КСНЗ или СНЗ, если не будут использованы вообще.
+        """)
+        
+        st.write("**Шкала старения для Метода 2:**")
+        
+        # Таблица для Метода 2
+        data_method2 = {
+            "Интервалы шкалы старения": ["< 1 месяца", "1 месяц", "2 месяца", "3 месяца", "4 месяца", "5 месяцев", 
+                                     "6 месяцев", "7 месяцев", "8 месяцев", "9 месяцев", "10 месяцев", "11 месяцев", 
+                                     "12-18 месяцев", "18-24 месяца", "> 3 лет", "Без даты в SAP ERP"],
+            "Нижняя граница (дни)": [0, 30, 60, 91, 122, 153, 183, 214, 245, 274, 305, 335, 365, 548, 1096, "≥ 10000"],
+            "Верхняя граница (дни)": [29, 59, 90, 121, 152, 182, 213, 244, 273, 304, 334, 364, 547, 1095, 9999, "-"],
+            "Категория запаса": ["Ликвидный", "Ликвидный", "Ликвидный", "Ликвидный", "Ликвидный", "Ликвидный", 
+                               "Ликвидный", "Ликвидный", "Ликвидный", "Ликвидный", "КСНЗ", "КСНЗ", 
+                               "СНЗ", "СНЗ", "СНЗ > 3 лет", "Требует проверки"]
+        }
+        
+        st.dataframe(data_method2, use_container_width=True)
+    
+    # 3. Подготовка данных
+    with tabs[2]:
+        st.header("🗃️ 3. Подготовка данных")
+        st.write("""
+        Для работы с системой прогнозирования требуется подготовить исходные данные в формате Excel или CSV. 
+        Требования к данным различаются в зависимости от выбранного метода прогнозирования.
+        """)
+        
+        st.subheader("📥 Для Метода 1: Прогноз с учетом потребности")
+        st.write("Необходимый формат данных (отчет ZMML_REP_RD):")
+        
+        # Таблица для данных Метода 1
+        data_req1 = {
+            "Колонка": ["БЕ", "Область планирования", "Материал", "Количество обеспечения", 
+                       "Дата поступления", "Дневное потребление"],
+            "Описание": ["Бизнес-единица", "Область планирования", "Код материала", 
+                       "Текущее количество на складе", "Историческая дата поступления или дата поступления на склад", 
+                       "Среднее дневное потребление материала"],
+            "Обязательность": ["Обязательно", "Обязательно", "Обязательно", "Обязательно", 
+                            "Обязательно", "Опционально (если не указано, будет считаться равным 0)"]
+        }
+        
+        st.dataframe(data_req1, use_container_width=True)
+        
+        st.subheader("📤 Для Метода 2: Прогноз без учета потребности")
+        st.write("Необходимый формат данных (отчет MB52):")
+        
+        # Таблица для данных Метода 2
+        data_req2 = {
+            "Колонка": ["БЕ", "Завод", "Склад", "Материал", "Партия", "СПП элемент", 
+                       "Дата поступления на склад", "Фактический запас"],
+            "Описание": ["Бизнес-единица", "Код завода", "Код склада", "Код материала", "Номер партии", 
+                       "СПП элемент", "Дата поступления материала на склад", "Текущее количество на складе"],
+            "Обязательность": ["Обязательно", "Обязательно", "Обязательно", "Обязательно", 
+                            "Обязательно", "Обязательно (может быть пустым)", "Обязательно", "Обязательно"]
+        }
+        
+        st.dataframe(data_req2, use_container_width=True)
+        
+        st.info("""
+        **Важно:** Даты в исходных данных должны быть в формате, который может быть распознан как дата (например, YYYY-MM-DD, DD.MM.YYYY).
+        Числовые данные (количество, потребление) должны быть представлены в виде чисел, а не текста.
+        
+        Вы можете скачать примеры шаблонов данных для обоих методов с помощью кнопок в боковой панели приложения.
+        """)
+
+    # 4. Работа с приложением
+    with tabs[3]:
+        st.header("🛠️ 4. Работа с приложением")
+        st.write("Для работы с системой прогнозирования СНЗ и КСНЗ выполните следующие шаги:")
+        
+        steps = {
+            "1️⃣ Выбор метода прогнозирования": """
             В боковой панели выберите один из двух методов прогнозирования:
-        </p>
-        <ul>
-            <li><b>Метод 1: С учетом потребности</b> — Если вы хотите учитывать прогнозное потребление материалов.</li>
-            <li><b>Метод 2: Без учета потребности</b> — Если вы хотите проанализировать только фактический запас.</li>
-        </ul>
-        
-        <h4>Шаг 2: Загрузка данных</h4>
-        <p>
+            - **Метод 1: С учетом потребности** — Если вы хотите учитывать прогнозное потребление материалов.
+            - **Метод 2: Без учета потребности** — Если вы хотите проанализировать только фактический запас.
+            """,
+            
+            "2️⃣ Загрузка данных": """
             Выберите источник данных:
-        </p>
-        <ul>
-            <li><b>Загрузить Excel файл</b> — Загрузите подготовленный файл с данными в формате Excel (.xlsx, .xls).</li>
-            <li><b>Использовать тестовые данные</b> — Используйте тестовые данные, предоставляемые системой для демонстрации работы.</li>
-        </ul>
-        
-        <h4>Шаг 3: Настройка параметров прогнозирования</h4>
-        <p>
+            - **Загрузить Excel файл** — Загрузите подготовленный файл с данными в формате Excel (.xlsx, .xls).
+            - **Использовать тестовые данные** — Используйте тестовые данные, предоставляемые системой для демонстрации работы.
+            """,
+            
+            "3️⃣ Настройка параметров прогнозирования": """
             Укажите дополнительные параметры:
-        </p>
-        <ul>
-            <li><b>Дата окончания прогноза</b> — До какой даты в будущем нужно построить прогноз (до 5 лет от текущей даты).</li>
-            <li><b>Шаг прогноза (дни)</b> — С каким интервалом строить прогноз (по умолчанию 30 дней).</li>
-        </ul>
-        
-        <h4>Шаг 4: Запуск прогнозирования</h4>
-        <p>
-            Нажмите кнопку <b>"Рассчитать прогноз"</b> для запуска процесса прогнозирования.
+            - **Дата окончания прогноза** — До какой даты в будущем нужно построить прогноз (до 5 лет от текущей даты).
+            - **Шаг прогноза (дни)** — С каким интервалом строить прогноз (по умолчанию 30 дней).
+            """,
+            
+            "4️⃣ Запуск прогнозирования": """
+            Нажмите кнопку **"Рассчитать прогноз"** для запуска процесса прогнозирования.
             Система проанализирует данные и отобразит результаты.
-        </p>
-        
-        <h4>Шаг 5: Анализ результатов</h4>
-        <p>
+            """,
+            
+            "5️⃣ Анализ результатов": """
             Результаты прогнозирования отображаются в трех вкладках:
-        </p>
-        <ul>
-            <li><b>Динамика запасов</b> — Графики изменения объемов запасов по категориям с течением времени.</li>
-            <li><b>Таблица сводных результатов</b> — Сводные данные по категориям запасов на каждую дату прогноза.</li>
-            <li><b>Детальные результаты</b> — Подробная информация по каждому материалу на выбранную дату прогноза.</li>
-        </ul>
-        
-        <h4>Шаг 6: Экспорт результатов</h4>
-        <p>
+            - **Динамика запасов** — Графики изменения объемов запасов по категориям с течением времени.
+            - **Таблица сводных результатов** — Сводные данные по категориям запасов на каждую дату прогноза.
+            - **Детальные результаты** — Подробная информация по каждому материалу на выбранную дату прогноза.
+            """,
+            
+            "6️⃣ Экспорт результатов": """
             Вы можете экспортировать результаты прогнозирования в Excel, выбрав один из форматов:
-        </p>
-        <ul>
-            <li><b>Excel (все данные)</b> — Экспорт всех данных, включая детальные результаты по каждой дате.</li>
-            <li><b>Excel (только сводные данные)</b> — Экспорт только сводных результатов без детализации.</li>
-        </ul>
-    </div>
+            - **Excel (все данные)** — Экспорт всех данных, включая детальные результаты по каждой дате.
+            - **Excel (только сводные данные)** — Экспорт только сводных результатов без детализации.
+            """
+        }
+        
+        for step, description in steps.items():
+            with st.expander(step, expanded=True):
+                st.markdown(description)
     
-    <div id="results" style="margin-top: 40px;">
-        <h3>5. Интерпретация результатов</h3>
-        <p>
-            Результаты прогнозирования представлены в различных форматах для удобства анализа:
-        </p>
+    # 5. Интерпретация результатов
+    with tabs[4]:
+        st.header("📈 5. Интерпретация результатов")
+        st.write("Результаты прогнозирования представлены в различных форматах для удобства анализа:")
         
-        <h4>Графики динамики запасов</h4>
-        <p>
-            <b>Линейный график</b> показывает изменение объема запасов по категориям на протяжении всего периода прогнозирования.
-            Это позволяет увидеть тренды и моменты, когда происходит существенное изменение структуры запасов.
-        </p>
-        <p>
-            <b>График-область</b> отображает структуру запасов в процентном соотношении по категориям.
-            Он позволяет оценить пропорции между различными категориями запасов в каждый момент времени.
-        </p>
-        <p>
-            Графики используют следующую цветовую кодировку:
-        </p>
-        <ul>
-            <li><span style="display: inline-block; width: 20px; height: 20px; background-color: #00b050; vertical-align: middle;"></span> <b>Зеленый</b> — Ликвидный запас</li>
-            <li><span style="display: inline-block; width: 20px; height: 20px; background-color: #ffbf00; vertical-align: middle;"></span> <b>Желтый</b> — КСНЗ (Критический сверхнормативный запас)</li>
-            <li><span style="display: inline-block; width: 20px; height: 20px; background-color: #ff4c4c; vertical-align: middle;"></span> <b>Светло-красный</b> — СНЗ (Сверхнормативный запас)</li>
-            <li><span style="display: inline-block; width: 20px; height: 20px; background-color: #c00000; vertical-align: middle;"></span> <b>Темно-красный</b> — СНЗ > 3 лет</li>
-            <li><span style="display: inline-block; width: 20px; height: 20px; background-color: #808080; vertical-align: middle;"></span> <b>Серый</b> — Требует проверки (для материалов без даты)</li>
-        </ul>
+        st.subheader("📉 Графики динамики запасов")
+        st.write("""
+        **Линейный график** показывает изменение объема запасов по категориям на протяжении всего периода прогнозирования.
+        Это позволяет увидеть тренды и моменты, когда происходит существенное изменение структуры запасов.
         
-        <h4>Таблица сводных результатов</h4>
-        <p>
-            Таблица содержит агрегированные данные по каждой категории запасов на каждую дату прогноза:
-        </p>
-        <ul>
-            <li><b>Дата прогноза</b> — Дата, на которую построен прогноз.</li>
-            <li><b>Категория</b> — Категория запаса (Ликвидный, КСНЗ, СНЗ, СНЗ > 3 лет).</li>
-            <li><b>Количество</b> — Суммарное количество запасов в данной категории.</li>
-        </ul>
-        <p>
-            Эта таблица позволяет быстро оценить динамику изменения объемов запасов по категориям и выявить моменты, 
-            когда происходит существенное увеличение КСНЗ или СНЗ.
-        </p>
+        **График-область** отображает структуру запасов в процентном соотношении по категориям.
+        Он позволяет оценить пропорции между различными категориями запасов в каждый момент времени.
+        """)
         
-        <h4>Детальные результаты</h4>
-        <p>
-            Таблица детальных результатов позволяет анализировать прогноз на уровне отдельных материалов:
-        </p>
-        <ul>
-            <li>В этой таблице отображаются все материалы из исходных данных.</li>
-            <li>Для каждого материала указана категория запаса на выбранную дату прогноза.</li>
-            <li>При прогнозировании по Методу 1 также указывается оставшееся количество с учетом потребления.</li>
-            <li>Материалы, которые в выбранную дату будут относиться к КСНЗ или СНЗ, выделены соответствующими цветами.</li>
-        </ul>
-        <p>
-            Фильтр по дате прогноза позволяет просматривать состояние запасов на любую дату в пределах периода прогнозирования.
-        </p>
-    </div>
+        st.write("Графики используют следующую цветовую кодировку:")
+        
+        colors = {
+            "🟢 Зеленый (Ликвидный запас)": "#00b050",
+            "🟡 Желтый (КСНЗ)": "#ffbf00",
+            "🔴 Светло-красный (СНЗ)": "#ff4c4c",
+            "🔴 Темно-красный (СНЗ > 3 лет)": "#c00000",
+            "⚪ Серый (Требует проверки)": "#808080"
+        }
+        
+        for label, color in colors.items():
+            st.markdown(f"<div style='display:flex;align-items:center;'><div style='width:20px;height:20px;background-color:{color};margin-right:10px;'></div><b>{label}</b></div>", unsafe_allow_html=True)
+        
+        st.subheader("📊 Таблица сводных результатов")
+        st.write("""
+        Таблица содержит агрегированные данные по каждой категории запасов на каждую дату прогноза:
+        - **Дата прогноза** — Дата, на которую построен прогноз.
+        - **Категория** — Категория запаса (Ликвидный, КСНЗ, СНЗ, СНЗ > 3 лет).
+        - **Количество** — Суммарное количество запасов в данной категории.
+        
+        Эта таблица позволяет быстро оценить динамику изменения объемов запасов по категориям и выявить моменты, 
+        когда происходит существенное увеличение КСНЗ или СНЗ.
+        """)
+        
+        st.subheader("📋 Детальные результаты")
+        st.write("""
+        Таблица детальных результатов позволяет анализировать прогноз на уровне отдельных материалов:
+        - В этой таблице отображаются все материалы из исходных данных.
+        - Для каждого материала указана категория запаса на выбранную дату прогноза.
+        - При прогнозировании по Методу 1 также указывается оставшееся количество с учетом потребления.
+        - Материалы, которые в выбранную дату будут относиться к КСНЗ или СНЗ, выделены соответствующими цветами.
+        
+        Фильтр по дате прогноза позволяет просматривать состояние запасов на любую дату в пределах периода прогнозирования.
+        """)
     
-    <div id="special-cases" style="margin-top: 40px;">
-        <h3>6. Особые случаи и обработка исключений</h3>
-        <p>
-            Система предусматривает обработку различных особых случаев и исключений, которые могут возникнуть при работе с данными:
-        </p>
+    # 6. Особые случаи и обработка исключений
+    with tabs[5]:
+        st.header("⚠️ 6. Особые случаи и обработка исключений")
+        st.write("""
+        Система предусматривает обработку различных особых случаев и исключений, которые могут возникнуть при работе с данными:
+        """)
         
-        <h4>Партии с разными датами поступления</h4>
-        <p>
-            В некоторых случаях одна и та же партия материала может иметь несколько записей с разными датами поступления.
-            Например, часть партии могла быть принята на склад в один день, а другая часть — в другой.
-        </p>
-        <p>
-            <b>Обработка:</b> Система анализирует такие случаи и обрабатывает их следующим образом:
-        </p>
-        <ul>
-            <li>Если все записи партии относятся к одной категории запаса, они объединяются в одну запись с суммарным количеством.</li>
-            <li>Если записи партии относятся к разным категориям (например, часть партии — ликвидный запас, а часть — КСНЗ), 
-                система создает отдельные записи для каждой категории с соответствующим количеством.</li>
-        </ul>
-        <p>
-            Пример:
-        </p>
-    </div>
-    """
-
-    batch_example_table = """
-    <table style="border-collapse: collapse; width: 100%; margin-top: 20px;">
-        <tr style="background-color: #f2f2f2;">
-            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">БЕ</th>
-            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Завод</th>
-            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Склад</th>
-            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Материал</th>
-            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Партия</th>
-            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Дата поступления</th>
-            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Количество</th>
-            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Категория</th>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">0101</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">1111</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">1111</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">222222</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">1111222444</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">27.12.2023</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">30</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">КСНЗ</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ddd;">0101</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">1111</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">1111</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">222222</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">1111222444</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">10.01.2024</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">70</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">Ликвидный</td>
-        </tr>
-    </table>
-    """
-
-    last_sections = """
-    <p>
+        st.subheader("🧩 Партии с разными датами поступления")
+        st.write("""
+        В некоторых случаях одна и та же партия материала может иметь несколько записей с разными датами поступления.
+        Например, часть партии могла быть принята на склад в один день, а другая часть — в другой.
+        """)
+        
+        st.write("**Обработка:** Система анализирует такие случаи и обрабатывает их следующим образом:")
+        st.markdown("""
+        - Если все записи партии относятся к одной категории запаса, они объединяются в одну запись с суммарным количеством.
+        - Если записи партии относятся к разным категориям (например, часть партии — ликвидный запас, а часть — КСНЗ), 
+          система создает отдельные записи для каждой категории с соответствующим количеством.
+        """)
+        
+        st.write("**Пример:**")
+        
+        # Пример с партией, имеющей разные даты поступления
+        batch_example = {
+            "БЕ": ["0101", "0101"],
+            "Завод": ["1111", "1111"],
+            "Склад": ["1111", "1111"],
+            "Материал": ["222222", "222222"],
+            "Партия": ["1111222444", "1111222444"],
+            "Дата поступления": ["27.12.2023", "10.01.2024"],
+            "Количество": [30, 70],
+            "Категория": ["КСНЗ", "Ликвидный"]
+        }
+        
+        st.dataframe(batch_example, use_container_width=True)
+        
+        st.write("""
         В этом примере часть партии поступила в декабре 2023 года (30 единиц), а часть — в январе 2024 года (70 единиц).
         При прогнозировании система будет учитывать разные даты поступления и соответствующие категории запаса.
-    </p>
-    
-    <h4>Материалы без даты поступления</h4>
-    <p>
+        """)
+        
+        st.subheader("🚫 Материалы без даты поступления")
+        st.write("""
         В некоторых случаях в данных может отсутствовать информация о дате поступления материала на склад.
-    </p>
-    <p>
-        <b>Обработка:</b> Материалы без даты поступления помечаются специальной категорией "Требует проверки" 
+        
+        **Обработка:** Материалы без даты поступления помечаются специальной категорией "Требует проверки" 
         и выделяются серым цветом в результатах. Такие материалы требуют дополнительного анализа и уточнения данных.
-    </p>
-    
-    <h4>Отсутствие данных о потреблении</h4>
-    <p>
+        """)
+        
+        st.subheader("📉 Отсутствие данных о потреблении")
+        st.write("""
         При использовании Метода 1 (с учетом потребности) может отсутствовать информация о дневном потреблении материалов.
-    </p>
-    <p>
-        <b>Обработка:</b> Если колонка "Дневное потребление" отсутствует в исходных данных, система автоматически
+        
+        **Обработка:** Если колонка "Дневное потребление" отсутствует в исходных данных, система автоматически
         добавляет ее и заполняет нулевыми значениями. В этом случае прогноз будет строиться исходя из предположения,
         что материалы не потребляются (аналогично Методу 2).
-    </p>
+        """)
     
-    <div id="formulas" style="margin-top: 40px;">
-        <h3>7. Формулы и алгоритмы расчета</h3>
-        <p>
-            В основе прогнозирования лежат следующие формулы и алгоритмы:
-        </p>
+    # 7. Формулы и алгоритмы расчета
+    with tabs[6]:
+        st.header("🧮 7. Формулы и алгоритмы расчета")
+        st.write("В основе прогнозирования лежат следующие формулы и алгоритмы:")
         
-        <h4>Расчет количества дней хранения</h4>
-        <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0 20px 0;">
-            <pre style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; font-family: Consolas, monospace; margin-top: 10px; margin-bottom: 15px;">Дни хранения = Дата прогноза - Дата поступления</pre>
-            <p>
-                Этот расчет выполняется для каждого материала на каждую дату прогноза.
-                В результате определяется, сколько дней будет храниться материал к указанной дате прогноза.
-            </p>
-        </div>
+        st.subheader("⏱️ Расчет количества дней хранения")
+        st.code("Дни хранения = Дата прогноза - Дата поступления")
+        st.write("""
+        Этот расчет выполняется для каждого материала на каждую дату прогноза.
+        В результате определяется, сколько дней будет храниться материал к указанной дате прогноза.
+        """)
         
-        <h4>Определение категории запаса (Метод 1)</h4>
-        <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0 20px 0;">
-            <pre style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; font-family: Consolas, monospace; margin-top: 10px; margin-bottom: 15px;">Если Дни хранения < 275:
-    Категория = "Ликвидный"
-Иначе если Дни хранения < 366:
-    Категория = "КСНЗ"
-Иначе если Дни хранения < 1097:
-    Категория = "СНЗ"
-Иначе:
-    Категория = "СНЗ > 3 лет"</pre>
-        </div>
+        st.subheader("🔄 Определение категории запаса (Метод 1)")
+        st.code("""
+        Если Дни хранения < 275:
+            Категория = "Ликвидный"
+        Иначе если Дни хранения < 366:
+            Категория = "КСНЗ"
+        Иначе если Дни хранения < 1097:
+            Категория = "СНЗ"
+        Иначе:
+            Категория = "СНЗ > 3 лет"
+        """)
         
-        <h4>Определение категории запаса (Метод 2)</h4>
-        <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0 20px 0;">
-            <pre style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; font-family: Consolas, monospace; margin-top: 10px; margin-bottom: 15px;">Если Дни хранения < 305:
-    Категория = "Ликвидный"
-Иначе если Дни хранения < 365:
-    Категория = "КСНЗ"
-Иначе если Дни хранения < 1096:
-    Категория = "СНЗ"
-Иначе:
-    Категория = "СНЗ > 3 лет"</pre>
-        </div>
+        st.subheader("🔄 Определение категории запаса (Метод 2)")
+        st.code("""
+        Если Дни хранения < 305:
+            Категория = "Ликвидный"
+        Иначе если Дни хранения < 365:
+            Категория = "КСНЗ"
+        Иначе если Дни хранения < 1096:
+            Категория = "СНЗ"
+        Иначе:
+            Категория = "СНЗ > 3 лет"
+        """)
         
-        <h4>Расчет оставшегося количества с учетом потребления (для Метода 1)</h4>
-        <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0 20px 0;">
-            <pre style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; font-family: Consolas, monospace; margin-top: 10px; margin-bottom: 15px;">Дни от текущей даты = Дата прогноза - Текущая дата
-Оставшееся количество = Количество обеспечения - (Дневное потребление * Дни от текущей даты)
-Если Оставшееся количество < 0:
-    Оставшееся количество = 0</pre>
-            <p>
-                Этот расчет позволяет учесть потребление материала при прогнозировании. 
-                Если материал полностью израсходуется до даты прогноза, его оставшееся количество будет равно 0,
-                и он не будет учитываться в статистике КСНЗ/СНЗ.
-            </p>
-        </div>
+        st.subheader("📉 Расчет оставшегося количества с учетом потребления (для Метода 1)")
+        st.code("""
+        Дни от текущей даты = Дата прогноза - Текущая дата
+        Оставшееся количество = Количество обеспечения - (Дневное потребление * Дни от текущей даты)
+        Если Оставшееся количество < 0:
+            Оставшееся количество = 0
+        """)
+        st.write("""
+        Этот расчет позволяет учесть потребление материала при прогнозировании. 
+        Если материал полностью израсходуется до даты прогноза, его оставшееся количество будет равно 0,
+        и он не будет учитываться в статистике КСНЗ/СНЗ.
+        """)
         
-        <h4>Алгоритм прогнозирования</h4>
-        <p>
-            Общий алгоритм прогнозирования включает следующие шаги:
-        </p>
-        <ol>
-            <li>Определение дат прогноза с заданным шагом от текущей даты до указанной даты окончания прогноза.</li>
-            <li>Для каждой даты прогноза:
-                <ul>
-                    <li>Расчет количества дней хранения для каждого материала.</li>
-                    <li>Для Метода 1: Расчет оставшегося количества с учетом потребления.</li>
-                    <li>Определение категории запаса для каждого материала.</li>
-                    <li>Агрегация данных по категориям (суммирование количества).</li>
-                </ul>
-            </li>
-            <li>Формирование сводных и детальных результатов в виде графиков и таблиц.</li>
-        </ol>
-    </div>
-    """
+        st.subheader("🔄 Алгоритм прогнозирования")
+        st.write("Общий алгоритм прогнозирования включает следующие шаги:")
+        st.markdown("""
+        1. Определение дат прогноза с заданным шагом от текущей даты до указанной даты окончания прогноза.
+        2. Для каждой даты прогноза:
+            - Расчет количества дней хранения для каждого материала.
+            - Для Метода 1: Расчет оставшегося количества с учетом потребления.
+            - Определение категории запаса для каждого материала.
+            - Агрегация данных по категориям (суммирование количества).
+        3. Формирование сводных и детальных результатов в виде графиков и таблиц.
+        """)
     
-    # Объединяем все части документации
-    full_documentation = (
-        documentation + 
-        methods_section + 
-        method1_table +
-        method2_section +
-        method2_table +
-        data_preparation_section +
-        method1_data_table +
-        method2_data_section +
-        method2_data_table +
-        data_notes +
-        remaining_sections +
-        batch_example_table +
-        last_sections
-    )
-    
-    return full_documentation
+    # Автоматический выбор вкладки на основе сайдбара
+    js = f"""
+<script>
+    window.onload = function() {{
+        var tabControls = window.parent.document.querySelectorAll('button[role="tab"]');
+        tabControls[{selected_tab}].click();
+    }}
+</script>
+"""
+    st.components.v1.html(js, height=0)
