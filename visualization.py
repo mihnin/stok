@@ -21,9 +21,31 @@ def display_results(summary_df, detailed_df, method_name):
     with tab1:
         st.markdown('<h3 class="sub-header">Динамика изменения объемов по категориям</h3>', unsafe_allow_html=True)
         
-        # Prepare data for chart
-        value_column = 'Оставшееся количество' if 'Оставшееся количество' in summary_df.columns else 'Фактический запас'
+        # Explanations for the charts
+        st.markdown("""
+        ### Пояснения к графикам:
+        - **Падение линии КСНЗ** означает, что часть запасов перешла в категорию СНЗ из-за увеличения срока хранения.
+        - **Рост линии КСНЗ** показывает переход запасов из категории "Ликвидный" в "Кандидаты в СНЗ".
+        - **Преобладание СНЗ на долгосрочном прогнозе**: При прогнозировании на 2-3 года вперед, большая часть запасов перейдет в категории "СНЗ" и "СНЗ > 3 лет", если не будет использована.
+        """, unsafe_allow_html=True)
         
+        # Determine the value column based on available columns in the DataFrame
+        if 'Оставшееся количество' in summary_df.columns:
+            value_column = 'Оставшееся количество'
+        elif 'Фактический запас' in summary_df.columns:
+            value_column = 'Фактический запас'
+        elif 'Количество обеспечения' in summary_df.columns:
+            value_column = 'Количество обеспечения'
+        else:
+            # Fallback - get the first numeric column
+            numeric_columns = summary_df.select_dtypes(include=['number']).columns
+            if len(numeric_columns) > 0:
+                value_column = numeric_columns[0]
+            else:
+                st.error("Не найдена подходящая колонка со значениями для графика")
+                return
+        
+        # Prepare data for chart
         pivot_df = summary_df.pivot_table(
             index='Дата прогноза',
             columns='Категория',

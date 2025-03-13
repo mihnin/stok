@@ -37,13 +37,6 @@ def forecast_with_demand(df, forecast_end_date, step_days=30):
             lambda x: calculate_aging_days(x, forecast_date)
         )
         
-        # Расчет оставшегося количества с учетом потребления
-        # Предполагаем, что есть колонка 'Дневное потребление'
-        days_from_now = (forecast_date - current_date).days
-        temp_df['Оставшееся количество'] = temp_df['Количество обеспечения'] - \
-                                          (temp_df['Дневное потребление'] * days_from_now)
-        temp_df['Оставшееся количество'] = temp_df['Оставшееся количество'].clip(lower=0)
-        
         # Определение категории для каждой строки
         temp_df['Категория'] = temp_df['Дни хранения'].apply(
             lambda x: determine_aging_category(x, method=1)['status']
@@ -53,8 +46,8 @@ def forecast_with_demand(df, forecast_end_date, step_days=30):
         temp_df['Дата прогноза'] = forecast_date
         detailed_forecast.append(temp_df)
         
-        # Агрегация по категориям
-        summary = temp_df.groupby('Категория')['Оставшееся количество'].sum().reset_index()
+        # Агрегация по категориям - используем напрямую "Количество обеспечения"
+        summary = temp_df.groupby('Категория')['Количество обеспечения'].sum().reset_index()
         summary['Дата прогноза'] = forecast_date
         
         forecast_results.append(summary)
