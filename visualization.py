@@ -3,8 +3,24 @@ import pandas as pd
 import datetime
 import plotly.graph_objects as go
 import io
+import re
 
 from constants import COLOR_CODES
+
+def sanitize_excel_sheetname(sheet_name):
+    """
+    Sanitize Excel sheet name by removing invalid characters.
+    
+    Args:
+        sheet_name: Original sheet name
+        
+    Returns:
+        Sanitized sheet name that is valid for Excel
+    """
+    # Remove invalid Excel sheet name characters: [ ] : * ? / \
+    sanitized = re.sub(r'[\[\]:*?/\\]', '_', sheet_name)
+    # Excel sheet names are limited to 31 characters
+    return sanitized[:31]
 
 def display_results(summary_df, detailed_df, method_name):
     """
@@ -45,11 +61,12 @@ def display_results(summary_df, detailed_df, method_name):
                 st.error("Не найдена подходящая колонка со значениями для графика")
                 return
         
-        # Prepare data for chart
+        # Prepare data for chart - ИСПРАВЛЕНО
+        # Используем выбранный столбец values=value_column вместо фиксированного значения
         pivot_df = summary_df.pivot_table(
             index='Дата прогноза',
             columns='Категория',
-            values=value_column,
+            values=value_column,  # Используем переменную value_column
             aggfunc='sum'
         ).fillna(0).reset_index()
         
@@ -213,10 +230,11 @@ def display_results(summary_df, detailed_df, method_name):
             summary_df.to_excel(writer, sheet_name='Сводные результаты', index=False)
             
             # Split detailed results by date
-            for date in detailed_df['Дата прогноза'].dt.strftime('%Y-%m-%d').unique():
-                sheet_name = f"Детали_{date}"
-                date_df = detailed_df[detailed_df['Дата прогноза'].dt.strftime('%Y-%m-%d') == date]
-                date_df.to_excel(writer, sheet_name=sheet_name[:31], index=False)  # Excel limits sheet name to 31 characters
+            for date in detailed_df['Дата прогноза'].dt.strftime('%Y-%м-%d').unique():
+                # Create sanitized sheet name
+                sheet_name = sanitize_excel_sheetname(f"Детали_{date}")
+                date_df = detailed_df[detailed_df['Дата прогноза'].dt.strftime('%Y-%м-%d') == date]
+                date_df.to_excel(writer, sheet_name=sheet_name, index=False)
             
             # Add pivot table
             if 'pivot_df' in st.session_state:
