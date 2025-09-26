@@ -2,199 +2,159 @@ import pandas as pd
 import datetime
 from utils import calculate_aging_days, determine_aging_category
 
-def forecast_with_demand(df, forecast_end_date, step_days=30):
+
+def forecast_with_demand(df, forecast_end_date, step_days=30, current_date=None):
     """
-    Прогнозирование запасов с учетом потребности
-    
+    Прогнозирование запасов с учетом потребности.
+
     Args:
-        df: DataFrame с данными о запасах и потреблении
-        forecast_end_date: Конечная дата прогноза
-        step_days: Шаг прогноза в днях
-    
+        df: DataFrame с данными о запасах и потреблении.
+        forecast_end_date: Конечная дата прогноза.
+        step_days: Шаг прогноза в днях.
+        current_date: Дата, от которой начинается прогноз (для тестирования).
+
     Returns:
-        DataFrame: Прогноз состояния запасов на каждую дату
+        tuple: Два DataFrame (сводный и детальный).
     """
-    # Конвертация дат в datetime
-    df['Дата поступления'] = pd.to_datetime(df['Дата поступления'])
+    df["Дата поступления"] = pd.to_datetime(df["Дата поступления"])
     forecast_end_date = pd.to_datetime(forecast_end_date)
-    
-    # Генерация дат прогноза
-    current_date = datetime.datetime.now()
-    dates = pd.date_range(start=current_date, end=forecast_end_date, freq=f'{step_days}D')
-    
-    # Создаем пустой список для результатов
-    forecast_results = []
-    
-    # Детальные результаты по каждому материалу
-    detailed_forecast = []
-    
+
+    if current_date is None:
+        current_date = datetime.datetime.now()
+
+    dates = pd.date_range(
+        start=current_date, end=forecast_end_date, freq=f"{step_days}D"
+    )
+
+    detailed_results = []
     for forecast_date in dates:
-        # Копируем исходные данные
         temp_df = df.copy()
-        
-        # Расчет дней хранения для текущей даты прогноза
-        temp_df['Дни хранения'] = temp_df['Дата поступления'].apply(
+        temp_df["Дни хранения"] = temp_df["Дата поступления"].apply(
             lambda x: calculate_aging_days(x, forecast_date)
         )
-        
-        # Определение категории для каждой строки
-        temp_df['Категория'] = temp_df['Дни хранения'].apply(
-            lambda x: determine_aging_category(x, method=1)['status']
+        temp_df["Категория"] = temp_df["Дни хранения"].apply(
+            lambda x: determine_aging_category(x, method=1)["status"]
         )
-        
-        # Сохраняем детальные данные для каждой даты прогноза
-        temp_df['Дата прогноза'] = forecast_date
-        detailed_forecast.append(temp_df)
-        
-        # Агрегация по категориям - используем напрямую "Количество обеспечения"
-        summary = temp_df.groupby('Категория')['Количество обеспечения'].sum().reset_index()
-        summary['Дата прогноза'] = forecast_date
-        
-        forecast_results.append(summary)
-    
-    # Объединяем все результаты
-    summary_df = pd.concat(forecast_results)
-    detailed_df = pd.concat(detailed_forecast)
-    
+        temp_df["Дата прогноза"] = forecast_date
+        detailed_results.append(temp_df)
+
+    if not detailed_results:
+        return pd.DataFrame(), pd.DataFrame()
+
+    detailed_df = pd.concat(detailed_results, ignore_index=True)
+    summary_df = (
+        detailed_df.groupby(["Дата прогноза", "Категория"])["Количество обеспечения"]
+        .sum()
+        .reset_index()
+    )
     return summary_df, detailed_df
 
-def forecast_without_demand(df, forecast_end_date, step_days=30):
+
+def forecast_without_demand(df, forecast_end_date, step_days=30, current_date=None):
     """
-    Прогнозирование запасов без учета потребности
-    
+    Прогнозирование запасов без учета потребности.
+
     Args:
-        df: DataFrame с данными о запасах
-        forecast_end_date: Конечная дата прогноза
-        step_days: Шаг прогноза в днях
-    
+        df: DataFrame с данными о запасах.
+        forecast_end_date: Конечная дата прогноза.
+        step_days: Шаг прогноза в днях.
+        current_date: Дата, от которой начинается прогноз (для тестирования).
+
     Returns:
-        DataFrame: Прогноз состояния запасов на каждую дату
+        tuple: Два DataFrame (сводный и детальный).
     """
-    # Конвертация дат в datetime
-    df['Дата поступления на склад'] = pd.to_datetime(df['Дата поступления на склад'])
+    df["Дата поступления на склад"] = pd.to_datetime(df["Дата поступления на склад"])
     forecast_end_date = pd.to_datetime(forecast_end_date)
-    
-    # Генерация дат прогноза
-    current_date = datetime.datetime.now()
-    dates = pd.date_range(start=current_date, end=forecast_end_date, freq=f'{step_days}D')
-    
-    # Создаем пустой список для результатов
-    forecast_results = []
-    
-    # Детальные результаты по каждому материалу
-    detailed_forecast = []
-    
+
+    if current_date is None:
+        current_date = datetime.datetime.now()
+
+    dates = pd.date_range(
+        start=current_date, end=forecast_end_date, freq=f"{step_days}D"
+    )
+
+    detailed_results = []
     for forecast_date in dates:
-        # Копируем исходные данные
         temp_df = df.copy()
-        
-        # Расчет дней хранения для текущей даты прогноза
-        temp_df['Дни хранения'] = temp_df['Дата поступления на склад'].apply(
+        temp_df["Дни хранения"] = temp_df["Дата поступления на склад"].apply(
             lambda x: calculate_aging_days(x, forecast_date)
         )
-        
-        # Определение категории для каждой строки
-        temp_df['Категория'] = temp_df['Дни хранения'].apply(
-            lambda x: determine_aging_category(x, method=2)['status']
+        temp_df["Категория"] = temp_df["Дни хранения"].apply(
+            lambda x: determine_aging_category(x, method=2)["status"]
         )
-        
-        # Сохраняем детальные данные для каждой даты прогноза
-        temp_df['Дата прогноза'] = forecast_date
-        detailed_forecast.append(temp_df)
-        
-        # Агрегация по категориям
-        summary = temp_df.groupby('Категория')['Фактический запас'].sum().reset_index()
-        summary['Дата прогноза'] = forecast_date
-        
-        forecast_results.append(summary)
-    
-    # Объединяем все результаты
-    summary_df = pd.concat(forecast_results)
-    detailed_df = pd.concat(detailed_forecast)
-    
+        temp_df["Дата прогноза"] = forecast_date
+        detailed_results.append(temp_df)
+
+    if not detailed_results:
+        return pd.DataFrame(), pd.DataFrame()
+
+    detailed_df = pd.concat(detailed_results, ignore_index=True)
+    summary_df = (
+        detailed_df.groupby(["Дата прогноза", "Категория"])["Фактический запас"]
+        .sum()
+        .reset_index()
+    )
     return summary_df, detailed_df
 
-def handle_mixed_batches(df):
+
+def handle_mixed_batches(df, current_date=None):
     """
-    Обработка партий с разными датами поступления
-    
+    Обработка партий с разными датами поступления.
+
     Args:
-        df: DataFrame с данными о запасах
-    
+        df (pd.DataFrame): DataFrame с данными о запасах.
+        current_date (datetime, optional): Текущая дата для расчета.
+
     Returns:
-        DataFrame: Обработанные данные
+        pd.DataFrame: Обработанные данные.
     """
-    # Группировка по ключевым полям партии
-    batch_groups = df.groupby(['БЕ', 'Завод', 'Склад', 'Материал', 'Партия', 'СПП элемент'])
-    
-    processed_data = []
-    
-    for name, group in batch_groups:
+    if current_date is None:
+        current_date = datetime.datetime.now()
+
+    processed_rows = []
+    group_cols = ["БЕ", "Завод", "Склад", "Материал", "Партия", "СПП элемент"]
+    for _, group in df.groupby(group_cols):
         if len(group) > 1:
-            # Если есть несколько записей для одной партии с разными датами
-            # Сортируем по дате (более новые даты первыми)
-            sorted_group = group.sort_values('Дата поступления на склад', ascending=False)
-            
-            # Проверяем наличие разных категорий в группе
-            categories = []
-            for _, row in sorted_group.iterrows():
-                days = calculate_aging_days(row['Дата поступления на склад'])
-                category = determine_aging_category(days, method=2)['status']
-                if category not in categories:
-                    categories.append(category)
-            
-            if len(categories) > 1:
-                # Если есть разные категории, создаем отдельные записи по категориям
-                for category in categories:
-                    # Выбираем записи с этой категорией
-                    category_rows = []
-                    remaining_qty = 0
-                    
-                    for _, row in sorted_group.iterrows():
-                        days = calculate_aging_days(row['Дата поступления на склад'])
-                        row_category = determine_aging_category(days, method=2)['status']
-                        
-                        if row_category == category:
-                            category_rows.append(row)
-                            remaining_qty += row['Фактический запас']
-                    
-                    if category_rows:
-                        # Создаем новую запись с суммарным количеством
-                        new_row = category_rows[0].copy()
-                        new_row['Фактический запас'] = remaining_qty
-                        processed_data.append(new_row)
+            group["temp_category"] = group["Дата поступления на склад"].apply(
+                lambda x: determine_aging_category(
+                    calculate_aging_days(x, current_date), method=2
+                )["status"]
+            )
+            if group["temp_category"].nunique() > 1:
+                for category, cat_group in group.groupby("temp_category"):
+                    new_row = cat_group.iloc[0].copy()
+                    new_row["Фактический запас"] = cat_group["Фактический запас"].sum()
+                    processed_rows.append(new_row)
             else:
-                # Если все записи в одной категории, объединяем их
-                new_row = sorted_group.iloc[0].copy()
-                new_row['Фактический запас'] = sorted_group['Фактический запас'].sum()
-                processed_data.append(new_row)
+                new_row = group.iloc[0].copy()
+                new_row["Фактический запас"] = group["Фактический запас"].sum()
+                processed_rows.append(new_row)
         else:
-            # Если только одна запись, добавляем как есть
-            processed_data.append(group.iloc[0])
-    
-    return pd.DataFrame(processed_data)
+            processed_rows.append(group.iloc[0])
+
+    if not processed_rows:
+        return pd.DataFrame(columns=df.columns)
+
+    result_df = pd.DataFrame(processed_rows).reset_index(drop=True)
+    if "temp_category" in result_df.columns:
+        result_df = result_df.drop(columns=["temp_category"])
+    return result_df
+
 
 def handle_materials_without_date(df):
     """
-    Обработка материалов без даты поступления
-    
+    Обработка материалов без даты поступления.
+
     Args:
-        df: DataFrame с данными о запасах
-    
+        df: DataFrame с данными о запасах.
+
     Returns:
-        DataFrame: Обработанные данные
+        DataFrame: Обработанные данные.
     """
-    # Находим записи без даты
-    no_date_mask = df['Дата поступления на склад'].isna()
-    
+    no_date_mask = df["Дата поступления на склад"].isna()
     if no_date_mask.any():
-        # Копируем DataFrame для модификации
         result_df = df.copy()
-        
-        # Устанавливаем специальную категорию для записей без даты
-        result_df.loc[no_date_mask, 'Категория'] = 'Требует проверки'
-        result_df.loc[no_date_mask, 'Дни хранения'] = 10000
-        
+        result_df.loc[no_date_mask, "Категория"] = "Требует проверки"
+        result_df.loc[no_date_mask, "Дни хранения"] = 10000
         return result_df
-    else:
-        return df
+    return df

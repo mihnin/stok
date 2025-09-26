@@ -4,3 +4,6 @@ numpy
 plotly
 openpyxl
 xlsxwriter
+pytest
+flake8
+black
