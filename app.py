@@ -1,62 +1,68 @@
 import streamlit as st
 import pandas as pd
 import datetime
-import plotly.express as px
-import plotly.graph_objects as go
-import io
 import os
-import base64
 
-from constants import COLOR_CODES, METHOD1_REQUIRED_COLUMNS, METHOD2_REQUIRED_COLUMNS
-from utils import validate_columns, generate_sample_data_method1, generate_sample_data_method2
+from constants import METHOD1_REQUIRED_COLUMNS, METHOD2_REQUIRED_COLUMNS
+from utils import (
+    validate_columns,
+    generate_sample_data_method1,
+    generate_sample_data_method2,
+)
 from data_processors import (
     forecast_with_demand,
     forecast_without_demand,
     handle_materials_without_date,
-    handle_mixed_batches
+    handle_mixed_batches,
 )
 from visualization import display_results
-from help import show_help_page  # Импортируем функцию справки
+from help import show_help_page
+
+EXCEL_MIME_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
 
 def initialize_session_state():
     """Initialize session state variables if they don't exist"""
-    if 'uploaded_data' not in st.session_state:
+    if "uploaded_data" not in st.session_state:
         st.session_state.uploaded_data = None
-    
-    if 'forecast_summary' not in st.session_state:
+
+    if "forecast_summary" not in st.session_state:
         st.session_state.forecast_summary = None
-    
-    if 'forecast_details' not in st.session_state:
+
+    if "forecast_details" not in st.session_state:
         st.session_state.forecast_details = None
-        
-    if 'forecast_method' not in st.session_state:
+
+    if "forecast_method" not in st.session_state:
         st.session_state.forecast_method = "Метод 1: С учетом потребности"
-    
-    if 'forecast_enddate' not in st.session_state:
-        st.session_state.forecast_enddate = datetime.datetime.now().date() + datetime.timedelta(days=365)
-    
-    if 'forecast_step' not in st.session_state:
+
+    if "forecast_enddate" not in st.session_state:
+        st.session_state.forecast_enddate = (
+            datetime.datetime.now().date() + datetime.timedelta(days=365)
+        )
+
+    if "forecast_step" not in st.session_state:
         st.session_state.forecast_step = 30
-        
-    if 'data_source' not in st.session_state:
+
+    if "data_source" not in st.session_state:
         st.session_state.data_source = "Загрузить Excel файл"
-        
-    if 'selected_forecast_date' not in st.session_state:
+
+    if "selected_forecast_date" not in st.session_state:
         st.session_state.selected_forecast_date = None
-        
-    if 'export_type' not in st.session_state:
+
+    if "export_type" not in st.session_state:
         st.session_state.export_type = "Excel (все данные)"
-        
-    if 'last_uploaded_file' not in st.session_state:
+
+    if "last_uploaded_file" not in st.session_state:
         st.session_state.last_uploaded_file = None
-        
-    # Добавляем новую переменную для отслеживания режима отображения
-    if 'show_help' not in st.session_state:
+
+    if "show_help" not in st.session_state:
         st.session_state.show_help = False
 
-# Функция для переключения режима справки
+
 def toggle_help():
+    """Toggle the help screen display state."""
     st.session_state.show_help = not st.session_state.show_help
+
 
 def on_method_change():
     """Reset uploaded data when method changes"""
@@ -65,23 +71,24 @@ def on_method_change():
     st.session_state.forecast_details = None
     st.session_state.selected_forecast_date = None
 
+
 def on_file_upload():
     """Handle file upload"""
     return
+
 
 def main():
     st.set_page_config(
         page_title="Система прогнозирования СНЗ и КСНЗ",
         page_icon="📊",
         layout="wide",
-        initial_sidebar_state="expanded"
+        initial_sidebar_state="expanded",
     )
-    
-    # Initialize session state
+
     initialize_session_state()
-    
-    # Apply CSS
-    st.markdown("""
+
+    st.markdown(
+        """
     <style>
     .main-header {
         font-size: 2.5rem;
@@ -95,264 +102,199 @@ def main():
         margin-top: 2rem;
         margin-bottom: 1rem;
     }
-    .status-box {
-        padding: 10px;
-        border-radius: 5px;
-        margin-bottom: 10px;
-    }
-    .status-likvid {
-        background-color: #00b050;
-        color: white;
-    }
-    .status-ksnz {
-        background-color: #ffbf00;
-        color: black;
-    }
-    .status-snz {
-        background-color: #ff4c4c;
-        color: white;
-    }
-    .status-snz3 {
-        background-color: #c00000;
-        color: white;
-    }
-    .help-button {
-        margin-top: 20px;
-    }
+    /* ... other styles ... */
     </style>
-    """, unsafe_allow_html=True)
-    
-    # Main content - removed tabs and documentation
-    st.markdown('<h1 class="main-header">Система прогнозирования сверхнормативных запасов (СНЗ и КСНЗ)</h1>', unsafe_allow_html=True)
-    
-    # Sidebar
+    """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        '<h1 class="main-header">Прогноз СНЗ и КСНЗ</h1>', unsafe_allow_html=True
+    )
+
     with st.sidebar:
-        # Добавляем кнопку справки вверху боковой панели
         help_col1, help_col2 = st.columns([1, 1])
         with help_col1:
-            help_button = st.button(
-                "📚 Справка" if not st.session_state.show_help else "🔙 Вернуться",
+            st.button(
+                "📚 Справка" if not st.session_state.show_help else "🔙 Назад",
                 on_click=toggle_help,
                 key="help_button",
-                use_container_width=True
+                use_container_width=True,
             )
-        
-        # Добавляем возможность скачать инструкцию в PDF
+
         with help_col2:
-            if os.path.exists('documentation/user_guide.pdf'):
+            if os.path.exists("documentation/user_guide.pdf"):
                 st.download_button(
                     label="📥 Скачать руководство",
-                    data=open('documentation/user_guide.pdf', 'rb').read(),
+                    data=open("documentation/user_guide.pdf", "rb").read(),
                     file_name="руководство_пользователя.pdf",
                     mime="application/pdf",
-                    use_container_width=True
+                    use_container_width=True,
                 )
-        
+
         st.markdown("---")
-        
-        # Остальное содержимое боковой панели показываем только в основном режиме (не в справке)
+
         if not st.session_state.show_help:
             st.subheader("Параметры прогнозирования")
-            
-            # Method selection with callback
+
             method = st.radio(
                 "Метод прогнозирования:",
                 [
                     "Метод 1: С учетом потребности",
-                    "Метод 2: Без учета потребности (только фактический запас)"
+                    "Метод 2: Без учета потребности (только фактический запас)",
                 ],
                 on_change=on_method_change,
-                key="forecast_method"
+                key="forecast_method",
             )
-            
-            # Show appropriate template info based on selected method
+
             if "Метод 1" in method:
-                st.info("Для данного метода используйте шаблон для Метода 1 (с учетом потребности)")
+                st.info("Используйте шаблон для Метода 1 (с потребностью)")
             else:
-                st.info("Для данного метода используйте шаблон для Метода 2 (без учета потребности)")
-            
+                st.info("Используйте шаблон для Метода 2 (без потребности)")
+
             data_source = st.radio(
                 "Источник данных:",
-                [
-                    "Загрузить Excel файл",
-                    "Использовать тестовые данные"
-                ],
-                key="data_source"
+                ["Загрузить Excel файл", "Использовать тестовые данные"],
+                key="data_source",
             )
-            
+
             if data_source == "Загрузить Excel файл":
                 uploaded_file = st.file_uploader(
-                    "Загрузите Excel файл с данными",
-                    type=["xlsx", "xls"],
-                    key="file_uploader"
+                    "Загрузите Excel файл", type=["xlsx", "xls"], key="file_uploader"
                 )
-                
+
                 if uploaded_file is not None:
                     try:
                         df = pd.read_excel(uploaded_file)
                         st.session_state.uploaded_data = df
                     except Exception as e:
                         st.error(f"Ошибка при загрузке файла: {str(e)}")
-            
+
             today = datetime.datetime.now().date()
             end_date = st.date_input(
                 "Дата окончания прогноза:",
                 value=st.session_state.forecast_enddate,
                 min_value=today,
-                max_value=today + datetime.timedelta(days=1825),  # Max 5 years
-                key="forecast_enddate"
+                max_value=today + datetime.timedelta(days=1825),
+                key="forecast_enddate",
             )
-            
+
             step_days = st.number_input(
                 "Шаг прогноза (дни):",
-                min_value=1,
-                max_value=90,
+                1,
+                90,
                 value=st.session_state.forecast_step,
-                key="forecast_step"
+                key="forecast_step",
             )
-            
+
             st.markdown("---")
-            
-            st.markdown("""
-            ### Условные обозначения:
-            <div class="status-box status-likvid">Ликвидный запас</div>
-            <div class="status-box status-ksnz">КСНЗ (Кандидаты в сверхнормативный запас)</div>
-            <div class="status-box status-snz">СНЗ (Сверхнормативный запас)</div>
-            <div class="status-box status-snz3">СНЗ > 3 лет</div>
-            """, unsafe_allow_html=True)
-            
-            run_forecast = st.button("Рассчитать прогноз", type="primary", use_container_width=True)
-            
-            # Sample data download
+            run_forecast = st.button(
+                "Рассчитать прогноз", type="primary", use_container_width=True
+            )
+
             st.markdown("---")
             st.subheader("Шаблоны данных")
-            
-            # Create sample data directory if it doesn't exist
-            if not os.path.exists('sample_data'):
-                os.makedirs('sample_data')
-            
+
+            if not os.path.exists("sample_data"):
+                os.makedirs("sample_data")
+
             col1, col2 = st.columns(2)
             with col1:
-                # Generate sample data if not exists
-                if not os.path.exists('sample_data/method1_sample.xlsx'):
+                if not os.path.exists("sample_data/method1_sample.xlsx"):
                     sample_df1 = generate_sample_data_method1()
-                    sample_df1.to_excel('sample_data/method1_sample.xlsx', index=False)
-                
+                    sample_df1.to_excel("sample_data/method1_sample.xlsx", index=False)
+
                 st.download_button(
                     label="Шаблон для Метода 1",
-                    data=open('sample_data/method1_sample.xlsx', 'rb').read(),
+                    data=open("sample_data/method1_sample.xlsx", "rb").read(),
                     file_name="шаблон_метод1.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    mime=EXCEL_MIME_TYPE,
                 )
-            
+
             with col2:
-                if not os.path.exists('sample_data/method2_sample.xlsx'):
+                if not os.path.exists("sample_data/method2_sample.xlsx"):
                     sample_df2 = generate_sample_data_method2()
-                    sample_df2.to_excel('sample_data/method2_sample.xlsx', index=False)
-                
+                    sample_df2.to_excel("sample_data/method2_sample.xlsx", index=False)
+
                 st.download_button(
                     label="Шаблон для Метода 2",
-                    data=open('sample_data/method2_sample.xlsx', 'rb').read(),
+                    data=open("sample_data/method2_sample.xlsx", "rb").read(),
                     file_name="шаблон_метод2.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    mime=EXCEL_MIME_TYPE,
                 )
-    
-    # Основная панель - либо показываем справку, либо основной интерфейс
+
     if st.session_state.show_help:
-        # Отображаем страницу справки
         show_help_page()
     else:
-        # Отображаем основной интерфейс (весь существующий код основной панели)
-        # Define data source
         df = None
-        
         if data_source == "Использовать тестовые данные":
             if "Метод 1" in method:
                 df = generate_sample_data_method1()
-                st.session_state.uploaded_data = df
-                st.info("Используются тестовые данные для Метода 1")
             else:
                 df = generate_sample_data_method2()
-                st.session_state.uploaded_data = df
-                st.info("Используются тестовые данные для Метода 2")
-        elif data_source == "Загрузить Excel файл" and st.session_state.uploaded_data is not None:
+            st.session_state.uploaded_data = df
+            st.info(f"Используются тестовые данные для {method}")
+        elif st.session_state.uploaded_data is not None:
             df = st.session_state.uploaded_data
-            st.success(f"Файл успешно загружен. Количество строк: {len(df)}")
-        
-        # Main panel
+            st.success(f"Файл загружен. Строк: {len(df)}")
+
         if df is not None:
-            # Display loaded data
-            st.markdown('<h2 class="sub-header">Исходные данные</h2>', unsafe_allow_html=True)
-            
+            st.markdown(
+                '<h2 class="sub-header">Исходные данные</h2>', unsafe_allow_html=True
+            )
             with st.expander("Просмотр исходных данных", expanded=False):
                 st.dataframe(df, use_container_width=True)
-            
-            # Check if uploaded file matches selected method
-            if "Метод 1" in method:
-                valid, missing_columns = validate_columns(df, METHOD1_REQUIRED_COLUMNS)
-                if not valid:
-                    st.error(f"Загруженный файл не соответствует Методу 1. Отсутствуют обязательные колонки: {', '.join(missing_columns)}")
-                    st.warning("Пожалуйста, загрузите файл, соответствующий выбранному методу")
-                    df = None
-            else:
-                valid, missing_columns = validate_columns(df, METHOD2_REQUIRED_COLUMNS)
-                if not valid:
-                    st.error(f"Загруженный файл не соответствует Методу 2. Отсутствуют обязательные колонки: {', '.join(missing_columns)}")
-                    st.warning("Пожалуйста, загрузите файл, соответствующий выбранному методу")
-                    df = None
-            
+
+            required_cols = (
+                METHOD1_REQUIRED_COLUMNS
+                if "Метод 1" in method
+                else METHOD2_REQUIRED_COLUMNS
+            )
+            valid, missing = validate_columns(df, required_cols)
+            if not valid:
+                st.error(f"Неверный формат. Нет колонок: {', '.join(missing)}")
+                df = None
+
             if df is not None and run_forecast:
-                st.markdown('<h2 class="sub-header">Результаты прогнозирования</h2>', unsafe_allow_html=True)
-                
-                if "Метод 1" in method:
-                    # Запускаем прогнозирование без дополнительных проверок и предупреждений
-                    with st.spinner("Выполняется прогнозирование..."):
-                        # Run forecast
-                        summary_results, detailed_results = forecast_with_demand(df, end_date, step_days)
-                        
-                        # Save results to session state
-                        st.session_state.forecast_summary = summary_results
-                        st.session_state.forecast_details = detailed_results
-                        
-                        # Set initial selected date if not already set
-                        if st.session_state.selected_forecast_date is None:
-                            all_dates = detailed_results['Дата прогноза'].dt.strftime('%Y-%m-%d').unique()
-                            if len(all_dates) > 0:
-                                st.session_state.selected_forecast_date = all_dates[0]
-                    
-                    # Display results
-                    display_results(summary_results, detailed_results, "Метод 1")
-                    
-                else:  # Method 2
-                    with st.spinner("Выполняется прогнозирование..."):
-                        # Handle special cases
+                st.markdown(
+                    '<h2 class="sub-header">Результаты</h2>', unsafe_allow_html=True
+                )
+                with st.spinner("Выполняется прогнозирование..."):
+                    if "Метод 1" in method:
+                        summary, details = forecast_with_demand(df, end_date, step_days)
+                    else:  # Method 2
                         df = handle_materials_without_date(df)
                         df = handle_mixed_batches(df)
-                        
-                        # Run forecast
-                        summary_results, detailed_results = forecast_without_demand(df, end_date, step_days)
-                        
-                        # Save results to session state
-                        st.session_state.forecast_summary = summary_results
-                        st.session_state.forecast_details = detailed_results
-                        
-                        # Set initial selected date if not already set
-                        if st.session_state.selected_forecast_date is None:
-                            all_dates = detailed_results['Дата прогноза'].dt.strftime('%Y-%m-%d').unique()
-                            if len(all_dates) > 0:
-                                st.session_state.selected_forecast_date = all_dates[0]
-                    
-                    # Display results
-                    display_results(summary_results, detailed_results, "Метод 2")
-            
-            # Display previous forecast results if they exist
-            elif st.session_state.forecast_summary is not None and st.session_state.forecast_details is not None:
-                st.markdown('<h2 class="sub-header">Результаты прогнозирования</h2>', unsafe_allow_html=True)
-                display_results(st.session_state.forecast_summary, st.session_state.forecast_details, 
-                                "Метод 1" if "Метод 1" in method else "Метод 2")
+                        summary, details = forecast_without_demand(
+                            df, end_date, step_days
+                        )
+
+                    st.session_state.forecast_summary = summary
+                    st.session_state.forecast_details = details
+                    if (
+                        st.session_state.selected_forecast_date is None
+                        and not details.empty
+                    ):
+                        all_dates = details["Дата прогноза"].unique()
+                        if len(all_dates) > 0:
+                            st.session_state.selected_forecast_date = all_dates[0]
+
+                if not summary.empty:
+                    display_results(summary, details, method)
+
+            elif st.session_state.forecast_summary is not None:
+                st.markdown(
+                    '<h2 class="sub-header">Результаты</h2>', unsafe_allow_html=True
+                )
+                display_results(
+                    st.session_state.forecast_summary,
+                    st.session_state.forecast_details,
+                    method,
+                )
         else:
             if data_source == "Загрузить Excel файл":
                 st.info("Пожалуйста, загрузите Excel файл для начала работы.")
+
 
 if __name__ == "__main__":
     main()
